@@ -1,0 +1,33 @@
+services:
+  # Central MQTT Message Broker
+  mqtt-broker:
+    image: eclipse-mosquitto:latest
+    container_name: mqtt_broker
+    ports:
+      - "1883:1883"   # Standard unencrypted MQTT communication port
+      - "9001:9001"   # Optional MQTT over WebSockets port
+    volumes:
+      # Automatically sets up mosquitto to allow anonymous connection routing without an external config file
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    restart: unless-stopped
+    networks:
+      - iot-network
+
+  # Your custom TypeScript Backend Server application
+  pi-grow-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pi-grow-server
+    environment:
+      # Injecting the Broker address dynamically. We use the container name 'mqtt-broker' as the hostname.
+      - MQTT_BROKER_URL=mqtt://mqtt-broker:1883
+    restart: unless-stopped
+    depends_on:
+      - mqtt-broker # Ensures the broker initializes completely before launching your backend server
+    networks:
+      - iot-network
+
+networks:
+  iot-network:
+    driver: bridge

@@ -1,0 +1,42 @@
+{
+  "name": "pigrow-server",
+  "version": "1.0.0",
+  "description": "Indoor growing automation software",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JacquesNolte/PiGrow-Server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JacquesNolte/PiGrow-Server/issues"
+  },
+  "homepage": "https://github.com/JacquesNolte/PiGrow-Server#readme",
+  "dependencies": {
+    "@fastify/cors": "^11.2.0",
+    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "fastify": "^5.8.5",
+    "mqtt": "^5.15.1",
+    "mqtt-match": "^3.0.0",
+    "pg": "^8.21.0",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@prisma/config": "^7.8.0",
+    "@types/node": "^25.9.2",
+    "@types/pg": "^8.20.0",
+    "@types/socket.io": "^3.0.1",
+    "prisma": "^7.8.0",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3"
+  }
+}

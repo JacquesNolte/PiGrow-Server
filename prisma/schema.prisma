@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client"            // 1. Change from prisma-client-js
+  output   = "../src/generated/client"   // 2. Explicitly point inside your src folder
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Device {
+  id               String            @id // Matches your deviceId string (e.g., "rpi-01")
+  createdAt        DateTime          @default(now())
+  telemetryLogs    TelemetryLog[]
+  lightStatusLogs  LightStatusLog[]
+  pumpStatusLogs   PumpStatusLog[]
+}
+
+model TelemetryLog {
+  id        Int      @id @default(autoincrement())
+  deviceId  String
+  temp      Float
+  humidity  Float
+  createdAt DateTime @default(now())
+  device    Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model LightStatusLog {
+  id         Int      @id @default(autoincrement())
+  deviceId   String
+  isOn       Boolean
+  brightness Int
+  createdAt  DateTime @default(now())
+  device     Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+model PumpStatusLog {
+  id          Int      @id @default(autoincrement())
+  deviceId    String
+  isActive    Boolean
+  flowRateLpm Float
+  createdAt   DateTime @default(now())
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
