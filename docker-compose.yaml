@@ -4,8 +4,8 @@ services:
     image: eclipse-mosquitto:latest
     container_name: mqtt_broker
     ports:
-      - "1883:1883"   # Standard unencrypted MQTT communication port
-      - "9001:9001"   # Optional MQTT over WebSockets port
+      - 1883:1883 # Standard unencrypted MQTT communication port
+      - 9001:9001 # Optional MQTT over WebSockets port
     volumes:
       # Automatically sets up mosquitto to allow anonymous connection routing without an external config file
       - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
@@ -20,14 +20,36 @@ services:
       dockerfile: Dockerfile
     container_name: pi-grow-server
     environment:
-      # Injecting the Broker address dynamically. We use the container name 'mqtt-broker' as the hostname.
+      # Injecting the Broker address dynamically. We use the container name mqtt-broker as the hostname.
       - MQTT_BROKER_URL=mqtt://mqtt-broker:1883
+      # PostgreSQL Connection String (using the postgres service name as host)
+      - DATABASE_URL=postgresql://postgres:password@postgres-db:5432/pigrow_db
     restart: unless-stopped
     depends_on:
-      - mqtt-broker # Ensures the broker initializes completely before launching your backend server
+      - mqtt-broker
+      - postgres-db # Ensures the database starts before the backend server
+    networks:
+      - iot-network
+
+  # PostgreSQL Database Service
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: postgres_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=pigrow_db
+    ports:
+      - 5432:5432 # Optional: Exposes port to your host machine for GUI tools (like DBeaver or pgAdmin)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persists database data on your host
+    restart: unless-stopped
     networks:
       - iot-network
 
 networks:
   iot-network:
     driver: bridge
+
+volumes:
+  postgres_data: # Named volume definition for persistent storage
