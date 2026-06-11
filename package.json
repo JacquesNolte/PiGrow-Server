@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
@@ -22,8 +22,10 @@
   "homepage": "https://github.com/JacquesNolte/PiGrow-Server#readme",
   "dependencies": {
     "@fastify/cors": "^11.2.0",
+    "@fastify/type-provider-typebox": "^6.1.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@sinclair/typebox": "^0.34.49",
     "fastify": "^5.8.5",
     "mqtt": "^5.15.1",
     "mqtt-match": "^3.0.0",
