@@ -31,8 +31,8 @@ export * from "./enums.js"
  * const prisma = new PrismaClient({
  *   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL })
  * })
- * // Fetch zero or more Cycles
- * const cycles = await prisma.cycles.findMany()
+ * // Fetch zero or more Controllers
+ * const controllers = await prisma.controller.findMany()
  * ```
  * 
  * Read more in our [docs](https://pris.ly/d/client).
@@ -42,32 +42,32 @@ export type PrismaClient<LogOpts extends Prisma.LogLevel = never, OmitOpts exten
 export { Prisma }
 
 /**
- * Model Cycles
+ * Model Controller
  * 
  */
-export type Cycles = Prisma.CyclesModel
+export type Controller = Prisma.ControllerModel
 /**
- * Model Phases
+ * Model Device
  * 
  */
-export type Phases = Prisma.PhasesModel
+export type Device = Prisma.DeviceModel
 /**
- * Model Lights
+ * Model GrowCycle
  * 
  */
-export type Lights = Prisma.LightsModel
+export type GrowCycle = Prisma.GrowCycleModel
 /**
- * Model Sensors
+ * Model GrowPhase
  * 
  */
-export type Sensors = Prisma.SensorsModel
+export type GrowPhase = Prisma.GrowPhaseModel
 /**
- * Model PhaseLightSchedules
+ * Model DeviceConfig
  * 
  */
-export type PhaseLightSchedules = Prisma.PhaseLightSchedulesModel
+export type DeviceConfig = Prisma.DeviceConfigModel
 /**
- * Model Temperature
+ * Model Telemetry
  * 
  */
-export type Temperature = Prisma.TemperatureModel
+export type Telemetry = Prisma.TelemetryModel

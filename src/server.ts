@@ -5,7 +5,7 @@ import { handleTelemetry } from "./mqtt-handlers/telemetry-handler.js";
 import mqttMatch from "mqtt-match";
 import { Server as SocketIOServer } from "socket.io";
 import prismaPlugin from "./plugins/prisma.js";
-import cycleRoutes from "./api/modules/cycles/cycles.routes.js";
+import cycleRoutes from "./api/modules/grow-cycles/grow-cycles.routes.js";
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({ logger: true });

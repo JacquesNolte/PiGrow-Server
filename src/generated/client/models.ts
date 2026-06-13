@@ -8,10 +8,10 @@
  *
  * 🟢 You can import this file directly.
  */
-export type * from './models/Cycles.js'
-export type * from './models/Phases.js'
-export type * from './models/Lights.js'
-export type * from './models/Sensors.js'
-export type * from './models/PhaseLightSchedules.js'
-export type * from './models/Temperature.js'
+export type * from './models/Controller.js'
+export type * from './models/Device.js'
+export type * from './models/GrowCycle.js'
+export type * from './models/GrowPhase.js'
+export type * from './models/DeviceConfig.js'
+export type * from './models/Telemetry.js'
 export type * from './commonInputTypes.js'

@@ -7,100 +7,123 @@ datasource db {
   provider = "postgresql"
 }
 
-model Cycles {
-  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String              @db.VarChar(100)
-  description             String              @db.VarChar(255)
-  type                    CycleType
-  start_date              DateTime            @db.Timestamp(6)
-  end_date                DateTime            @db.Timestamp(6)
-  plant_type              String              @db.VarChar(100)
+// ==========================================
+// PHYSICAL INFRASTRUCTURE LAYER
+// ==========================================
 
-  phases                  Phases[]
-  lights                  Lights[]
-  sensors                 Sensors[]
-
-  @@map("cycles")  
-}
-
-model Phases {
-  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String              @db.VarChar(100)
-  description             String              @db.VarChar(255)
-  type                    PhaseType
-  start_date              DateTime            @db.Timestamp(6)
-  end_date                DateTime            @db.Timestamp(6)
-  cycle_id                String              @db.Uuid
-  active                  Boolean             @db.Boolean
-
-  phase_light_schedules   PhaseLightSchedules[]
-
-  cycles                  Cycles              @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
+model Controller {
+  id          String      @id @default(uuid())
+  macAddress  String      @unique // Unique identifier for the Raspberry Pi
+  ipAddress   String      
+  name        String      // e.g., "Tent 1 Pi", "Clone Rack Pi"
+  status      String      @default("OFFLINE") // ONLINE, OFFLINE, ERROR
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   
-
-  @@map("phases")
+  devices     Device[]
+  growCycles  GrowCycle[] // A Pi can run multiple cycles over its lifetime
 }
 
-model Lights {
-  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String              @db.VarChar(100)
-  description             String              @db.VarChar(255)
-  cycle_id                String              @db.Uuid
-
-  phase_light_schedules   PhaseLightSchedules[]
-
-  cycles                  Cycles              @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
-
-  @@map("lights")
+enum DeviceType {
+  LIGHT
+  EXHAUST_FAN
+  INTAKE_FAN
+  CIRCULATION_FAN
+  WATER_PUMP
+  AIR_CONDITIONER
+  HEATER
+  HUMIDIFIER
+  DEHUMIDIFIER
+  CO2_INJECTOR
 }
 
-model Sensors {
-  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name                    String              @db.VarChar(100)
-  description             String              @db.VarChar(255)
-  cycle_id                String              @db.Uuid
+model Device {
+  id            String          @id @default(uuid())
+  controllerId  String
+  name          String          // e.g., "SpiderFarmer SF2000", "AC Infinity T6"
+  type          DeviceType
+  pinNumber     Int             // GPIO pin or Relay channel on the Pi
+  mqttTopic     String          // e.g., "tent1/device/light/cmd"
+  isActive      Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
-  cycles                  Cycles              @relation(fields: [cycle_id], references: [id], onDelete: Cascade)
-
-  @@map("sensors")
+  controller    Controller      @relation(fields: [controllerId], references: [id], onDelete: Cascade)
+  deviceConfigs DeviceConfig[]  // The specific settings for this device per phase
 }
 
-model PhaseLightSchedules {
-  phase_id                String              @db.Uuid
-  light_id                String              @db.Uuid
-  trigger_on_time         DateTime            @db.Timestamp(6)
-  trigger_off_time        DateTime            @db.Timestamp(6)
+// ==========================================
+// LOGICAL GROW & CONFIGURATION LAYER
+// ==========================================
 
-  phases                  Phases              @relation(fields: [phase_id], references: [id], onDelete: Cascade)
-  lights                  Lights              @relation(fields: [light_id], references: [id], onDelete: Cascade)
+model GrowCycle {
+  id           String      @id @default(uuid())
+  controllerId String      // Links this specific grow cycle to a physical Pi
+  name         String
+  isActive     Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  @@unique([phase_id, light_id])
-
-  @@map("phase_light_schedules")
+  controller   Controller  @relation(fields: [controllerId], references: [id])
+  phases       GrowPhase[]
+  telemetry   Telemetry[]
 }
 
-model Temperature {
-  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  sensor_id               String              @db.Uuid
-  phase_id                String              @db.Uuid
-  value                   Float               @db.DoublePrecision
-  created_at              DateTime            
+model GrowPhase {
+  id          String         @id @default(uuid())
+  growCycleId String
+  name        String         // e.g., "Vegetative", "Flower"
+  order       Int            // Execution order sequence
+  durationDays Int           // Target days for this phase
+  isActive    Boolean        @default(false)
+  startAt     DateTime?
+  endAt       DateTime?         
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  growCycle   GrowCycle      @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
+  deviceConfigs DeviceConfig[] // Specific device rules for this phase
 }
 
+// ==========================================
+// TRIGGER & DEVICE CONFIGURATION LAYER
+// ==========================================
 
-
-
-enum CycleType {
-  GROW
-
-  @@map("cycle_types")
+enum TriggerType {
+  SCHEDULE    // Time-based (e.g., Lights on 18/6)
+  THRESHOLD   // Environment-based (e.g., Turn on AC if Temp > 26°C)
+  ALWAYS_ON   // Continuous devices (e.g., Circulation fans)
+  ALWAYS_OFF  // Safety overrides
 }
 
-enum PhaseType {
-  PROPOGATION
-  VEG
-  FLOWER
-  CURING
+model DeviceConfig {
+  id          String      @id @default(uuid())
+  growPhaseId String
+  deviceId    String      // Which physical device this config rules over
+  triggerType TriggerType
+  
+  // JSON payload stores specific parameters depending on TriggerType
+  // Schedule Example:  {"onTime": "06:00", "offTime": "00:00"}
+  // Threshold Example: {"sensor": "TEMPERATURE", "condition": "GREATER_THAN", "value": 26.5, "action": "ON"}
+  configData  Json        
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  @@map("phase_types")
+  growPhase   GrowPhase   @relation(fields: [growPhaseId], references: [id], onDelete: Cascade)
+  device      Device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// TELEMETRY LAYER
+// ==========================================
+
+model Telemetry {
+  id          String    @id @default(uuid())
+  growCycleId String
+  sensorType  String    // TEMPERATURE, HUMIDITY, CO2, PH, EC
+  value       Float
+  createdAt   DateTime  @default(now())
+
+  growCycle   GrowCycle @relation(fields: [growCycleId], references: [id], onDelete: Cascade)
 }

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "GrowPhase" ALTER COLUMN "startAt" DROP NOT NULL,
+ALTER COLUMN "endAt" DROP NOT NULL;

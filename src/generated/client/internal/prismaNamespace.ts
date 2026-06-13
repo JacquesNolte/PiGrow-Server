@@ -384,12 +384,12 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  Cycles: 'Cycles',
-  Phases: 'Phases',
-  Lights: 'Lights',
-  Sensors: 'Sensors',
-  PhaseLightSchedules: 'PhaseLightSchedules',
-  Temperature: 'Temperature'
+  Controller: 'Controller',
+  Device: 'Device',
+  GrowCycle: 'GrowCycle',
+  GrowPhase: 'GrowPhase',
+  DeviceConfig: 'DeviceConfig',
+  Telemetry: 'Telemetry'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -405,451 +405,451 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "cycles" | "phases" | "lights" | "sensors" | "phaseLightSchedules" | "temperature"
+    modelProps: "controller" | "device" | "growCycle" | "growPhase" | "deviceConfig" | "telemetry"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
-    Cycles: {
-      payload: Prisma.$CyclesPayload<ExtArgs>
-      fields: Prisma.CyclesFieldRefs
+    Controller: {
+      payload: Prisma.$ControllerPayload<ExtArgs>
+      fields: Prisma.ControllerFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.CyclesFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload> | null
+          args: Prisma.ControllerFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.CyclesFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>
+          args: Prisma.ControllerFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>
         }
         findFirst: {
-          args: Prisma.CyclesFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload> | null
+          args: Prisma.ControllerFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.CyclesFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>
+          args: Prisma.ControllerFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>
         }
         findMany: {
-          args: Prisma.CyclesFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>[]
+          args: Prisma.ControllerFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>[]
         }
         create: {
-          args: Prisma.CyclesCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>
+          args: Prisma.ControllerCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>
         }
         createMany: {
-          args: Prisma.CyclesCreateManyArgs<ExtArgs>
+          args: Prisma.ControllerCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.CyclesCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>[]
+          args: Prisma.ControllerCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>[]
         }
         delete: {
-          args: Prisma.CyclesDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>
+          args: Prisma.ControllerDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>
         }
         update: {
-          args: Prisma.CyclesUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>
+          args: Prisma.ControllerUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>
         }
         deleteMany: {
-          args: Prisma.CyclesDeleteManyArgs<ExtArgs>
+          args: Prisma.ControllerDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.CyclesUpdateManyArgs<ExtArgs>
+          args: Prisma.ControllerUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.CyclesUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>[]
+          args: Prisma.ControllerUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>[]
         }
         upsert: {
-          args: Prisma.CyclesUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$CyclesPayload>
+          args: Prisma.ControllerUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ControllerPayload>
         }
         aggregate: {
-          args: Prisma.CyclesAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateCycles>
+          args: Prisma.ControllerAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateController>
         }
         groupBy: {
-          args: Prisma.CyclesGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CyclesGroupByOutputType>[]
+          args: Prisma.ControllerGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ControllerGroupByOutputType>[]
         }
         count: {
-          args: Prisma.CyclesCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.CyclesCountAggregateOutputType> | number
+          args: Prisma.ControllerCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ControllerCountAggregateOutputType> | number
         }
       }
     }
-    Phases: {
-      payload: Prisma.$PhasesPayload<ExtArgs>
-      fields: Prisma.PhasesFieldRefs
+    Device: {
+      payload: Prisma.$DevicePayload<ExtArgs>
+      fields: Prisma.DeviceFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.PhasesFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload> | null
+          args: Prisma.DeviceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.PhasesFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>
+          args: Prisma.DeviceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>
         }
         findFirst: {
-          args: Prisma.PhasesFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload> | null
+          args: Prisma.DeviceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.PhasesFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>
+          args: Prisma.DeviceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>
         }
         findMany: {
-          args: Prisma.PhasesFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>[]
+          args: Prisma.DeviceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>[]
         }
         create: {
-          args: Prisma.PhasesCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>
+          args: Prisma.DeviceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>
         }
         createMany: {
-          args: Prisma.PhasesCreateManyArgs<ExtArgs>
+          args: Prisma.DeviceCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.PhasesCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>[]
+          args: Prisma.DeviceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>[]
         }
         delete: {
-          args: Prisma.PhasesDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>
+          args: Prisma.DeviceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>
         }
         update: {
-          args: Prisma.PhasesUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>
+          args: Prisma.DeviceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>
         }
         deleteMany: {
-          args: Prisma.PhasesDeleteManyArgs<ExtArgs>
+          args: Prisma.DeviceDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.PhasesUpdateManyArgs<ExtArgs>
+          args: Prisma.DeviceUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.PhasesUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>[]
+          args: Prisma.DeviceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>[]
         }
         upsert: {
-          args: Prisma.PhasesUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhasesPayload>
+          args: Prisma.DeviceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DevicePayload>
         }
         aggregate: {
-          args: Prisma.PhasesAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregatePhases>
+          args: Prisma.DeviceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDevice>
         }
         groupBy: {
-          args: Prisma.PhasesGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PhasesGroupByOutputType>[]
+          args: Prisma.DeviceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceGroupByOutputType>[]
         }
         count: {
-          args: Prisma.PhasesCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PhasesCountAggregateOutputType> | number
+          args: Prisma.DeviceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceCountAggregateOutputType> | number
         }
       }
     }
-    Lights: {
-      payload: Prisma.$LightsPayload<ExtArgs>
-      fields: Prisma.LightsFieldRefs
+    GrowCycle: {
+      payload: Prisma.$GrowCyclePayload<ExtArgs>
+      fields: Prisma.GrowCycleFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.LightsFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload> | null
+          args: Prisma.GrowCycleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.LightsFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>
+          args: Prisma.GrowCycleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>
         }
         findFirst: {
-          args: Prisma.LightsFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload> | null
+          args: Prisma.GrowCycleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.LightsFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>
+          args: Prisma.GrowCycleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>
         }
         findMany: {
-          args: Prisma.LightsFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>[]
+          args: Prisma.GrowCycleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>[]
         }
         create: {
-          args: Prisma.LightsCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>
+          args: Prisma.GrowCycleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>
         }
         createMany: {
-          args: Prisma.LightsCreateManyArgs<ExtArgs>
+          args: Prisma.GrowCycleCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.LightsCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>[]
+          args: Prisma.GrowCycleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>[]
         }
         delete: {
-          args: Prisma.LightsDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>
+          args: Prisma.GrowCycleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>
         }
         update: {
-          args: Prisma.LightsUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>
+          args: Prisma.GrowCycleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>
         }
         deleteMany: {
-          args: Prisma.LightsDeleteManyArgs<ExtArgs>
+          args: Prisma.GrowCycleDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.LightsUpdateManyArgs<ExtArgs>
+          args: Prisma.GrowCycleUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.LightsUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>[]
+          args: Prisma.GrowCycleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>[]
         }
         upsert: {
-          args: Prisma.LightsUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$LightsPayload>
+          args: Prisma.GrowCycleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowCyclePayload>
         }
         aggregate: {
-          args: Prisma.LightsAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateLights>
+          args: Prisma.GrowCycleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGrowCycle>
         }
         groupBy: {
-          args: Prisma.LightsGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.LightsGroupByOutputType>[]
+          args: Prisma.GrowCycleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GrowCycleGroupByOutputType>[]
         }
         count: {
-          args: Prisma.LightsCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.LightsCountAggregateOutputType> | number
+          args: Prisma.GrowCycleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GrowCycleCountAggregateOutputType> | number
         }
       }
     }
-    Sensors: {
-      payload: Prisma.$SensorsPayload<ExtArgs>
-      fields: Prisma.SensorsFieldRefs
+    GrowPhase: {
+      payload: Prisma.$GrowPhasePayload<ExtArgs>
+      fields: Prisma.GrowPhaseFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.SensorsFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload> | null
+          args: Prisma.GrowPhaseFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.SensorsFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>
+          args: Prisma.GrowPhaseFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>
         }
         findFirst: {
-          args: Prisma.SensorsFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload> | null
+          args: Prisma.GrowPhaseFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.SensorsFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>
+          args: Prisma.GrowPhaseFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>
         }
         findMany: {
-          args: Prisma.SensorsFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>[]
+          args: Prisma.GrowPhaseFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>[]
         }
         create: {
-          args: Prisma.SensorsCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>
+          args: Prisma.GrowPhaseCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>
         }
         createMany: {
-          args: Prisma.SensorsCreateManyArgs<ExtArgs>
+          args: Prisma.GrowPhaseCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.SensorsCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>[]
+          args: Prisma.GrowPhaseCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>[]
         }
         delete: {
-          args: Prisma.SensorsDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>
+          args: Prisma.GrowPhaseDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>
         }
         update: {
-          args: Prisma.SensorsUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>
+          args: Prisma.GrowPhaseUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>
         }
         deleteMany: {
-          args: Prisma.SensorsDeleteManyArgs<ExtArgs>
+          args: Prisma.GrowPhaseDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.SensorsUpdateManyArgs<ExtArgs>
+          args: Prisma.GrowPhaseUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.SensorsUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>[]
+          args: Prisma.GrowPhaseUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>[]
         }
         upsert: {
-          args: Prisma.SensorsUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$SensorsPayload>
+          args: Prisma.GrowPhaseUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GrowPhasePayload>
         }
         aggregate: {
-          args: Prisma.SensorsAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateSensors>
+          args: Prisma.GrowPhaseAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGrowPhase>
         }
         groupBy: {
-          args: Prisma.SensorsGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.SensorsGroupByOutputType>[]
+          args: Prisma.GrowPhaseGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GrowPhaseGroupByOutputType>[]
         }
         count: {
-          args: Prisma.SensorsCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.SensorsCountAggregateOutputType> | number
+          args: Prisma.GrowPhaseCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GrowPhaseCountAggregateOutputType> | number
         }
       }
     }
-    PhaseLightSchedules: {
-      payload: Prisma.$PhaseLightSchedulesPayload<ExtArgs>
-      fields: Prisma.PhaseLightSchedulesFieldRefs
+    DeviceConfig: {
+      payload: Prisma.$DeviceConfigPayload<ExtArgs>
+      fields: Prisma.DeviceConfigFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.PhaseLightSchedulesFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload> | null
+          args: Prisma.DeviceConfigFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.PhaseLightSchedulesFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>
+          args: Prisma.DeviceConfigFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
         }
         findFirst: {
-          args: Prisma.PhaseLightSchedulesFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload> | null
+          args: Prisma.DeviceConfigFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.PhaseLightSchedulesFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>
+          args: Prisma.DeviceConfigFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
         }
         findMany: {
-          args: Prisma.PhaseLightSchedulesFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>[]
+          args: Prisma.DeviceConfigFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>[]
         }
         create: {
-          args: Prisma.PhaseLightSchedulesCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>
+          args: Prisma.DeviceConfigCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
         }
         createMany: {
-          args: Prisma.PhaseLightSchedulesCreateManyArgs<ExtArgs>
+          args: Prisma.DeviceConfigCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.PhaseLightSchedulesCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>[]
+          args: Prisma.DeviceConfigCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>[]
         }
         delete: {
-          args: Prisma.PhaseLightSchedulesDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>
+          args: Prisma.DeviceConfigDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
         }
         update: {
-          args: Prisma.PhaseLightSchedulesUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>
+          args: Prisma.DeviceConfigUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
         }
         deleteMany: {
-          args: Prisma.PhaseLightSchedulesDeleteManyArgs<ExtArgs>
+          args: Prisma.DeviceConfigDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.PhaseLightSchedulesUpdateManyArgs<ExtArgs>
+          args: Prisma.DeviceConfigUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.PhaseLightSchedulesUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>[]
+          args: Prisma.DeviceConfigUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>[]
         }
         upsert: {
-          args: Prisma.PhaseLightSchedulesUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseLightSchedulesPayload>
+          args: Prisma.DeviceConfigUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
         }
         aggregate: {
-          args: Prisma.PhaseLightSchedulesAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregatePhaseLightSchedules>
+          args: Prisma.DeviceConfigAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDeviceConfig>
         }
         groupBy: {
-          args: Prisma.PhaseLightSchedulesGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PhaseLightSchedulesGroupByOutputType>[]
+          args: Prisma.DeviceConfigGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceConfigGroupByOutputType>[]
         }
         count: {
-          args: Prisma.PhaseLightSchedulesCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.PhaseLightSchedulesCountAggregateOutputType> | number
+          args: Prisma.DeviceConfigCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceConfigCountAggregateOutputType> | number
         }
       }
     }
-    Temperature: {
-      payload: Prisma.$TemperaturePayload<ExtArgs>
-      fields: Prisma.TemperatureFieldRefs
+    Telemetry: {
+      payload: Prisma.$TelemetryPayload<ExtArgs>
+      fields: Prisma.TelemetryFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.TemperatureFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload> | null
+          args: Prisma.TelemetryFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.TemperatureFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>
+          args: Prisma.TelemetryFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>
         }
         findFirst: {
-          args: Prisma.TemperatureFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload> | null
+          args: Prisma.TelemetryFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.TemperatureFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>
+          args: Prisma.TelemetryFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>
         }
         findMany: {
-          args: Prisma.TemperatureFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>[]
+          args: Prisma.TelemetryFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>[]
         }
         create: {
-          args: Prisma.TemperatureCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>
+          args: Prisma.TelemetryCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>
         }
         createMany: {
-          args: Prisma.TemperatureCreateManyArgs<ExtArgs>
+          args: Prisma.TelemetryCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.TemperatureCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>[]
+          args: Prisma.TelemetryCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>[]
         }
         delete: {
-          args: Prisma.TemperatureDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>
+          args: Prisma.TelemetryDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>
         }
         update: {
-          args: Prisma.TemperatureUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>
+          args: Prisma.TelemetryUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>
         }
         deleteMany: {
-          args: Prisma.TemperatureDeleteManyArgs<ExtArgs>
+          args: Prisma.TelemetryDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.TemperatureUpdateManyArgs<ExtArgs>
+          args: Prisma.TelemetryUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.TemperatureUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>[]
+          args: Prisma.TelemetryUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>[]
         }
         upsert: {
-          args: Prisma.TemperatureUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$TemperaturePayload>
+          args: Prisma.TelemetryUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TelemetryPayload>
         }
         aggregate: {
-          args: Prisma.TemperatureAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateTemperature>
+          args: Prisma.TelemetryAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTelemetry>
         }
         groupBy: {
-          args: Prisma.TemperatureGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.TemperatureGroupByOutputType>[]
+          args: Prisma.TelemetryGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TelemetryGroupByOutputType>[]
         }
         count: {
-          args: Prisma.TemperatureCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.TemperatureCountAggregateOutputType> | number
+          args: Prisma.TelemetryCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TelemetryCountAggregateOutputType> | number
         }
       }
     }
@@ -892,72 +892,84 @@ export const TransactionIsolationLevel = runtime.makeStrictEnum({
 export type TransactionIsolationLevel = (typeof TransactionIsolationLevel)[keyof typeof TransactionIsolationLevel]
 
 
-export const CyclesScalarFieldEnum = {
+export const ControllerScalarFieldEnum = {
   id: 'id',
+  macAddress: 'macAddress',
+  ipAddress: 'ipAddress',
   name: 'name',
-  description: 'description',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ControllerScalarFieldEnum = (typeof ControllerScalarFieldEnum)[keyof typeof ControllerScalarFieldEnum]
+
+
+export const DeviceScalarFieldEnum = {
+  id: 'id',
+  controllerId: 'controllerId',
+  name: 'name',
   type: 'type',
-  start_date: 'start_date',
-  end_date: 'end_date',
-  plant_type: 'plant_type'
+  pinNumber: 'pinNumber',
+  mqttTopic: 'mqttTopic',
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
-export type CyclesScalarFieldEnum = (typeof CyclesScalarFieldEnum)[keyof typeof CyclesScalarFieldEnum]
+export type DeviceScalarFieldEnum = (typeof DeviceScalarFieldEnum)[keyof typeof DeviceScalarFieldEnum]
 
 
-export const PhasesScalarFieldEnum = {
+export const GrowCycleScalarFieldEnum = {
   id: 'id',
+  controllerId: 'controllerId',
   name: 'name',
-  description: 'description',
-  type: 'type',
-  start_date: 'start_date',
-  end_date: 'end_date',
-  cycle_id: 'cycle_id',
-  active: 'active'
+  isActive: 'isActive',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
-export type PhasesScalarFieldEnum = (typeof PhasesScalarFieldEnum)[keyof typeof PhasesScalarFieldEnum]
+export type GrowCycleScalarFieldEnum = (typeof GrowCycleScalarFieldEnum)[keyof typeof GrowCycleScalarFieldEnum]
 
 
-export const LightsScalarFieldEnum = {
+export const GrowPhaseScalarFieldEnum = {
   id: 'id',
+  growCycleId: 'growCycleId',
   name: 'name',
-  description: 'description',
-  cycle_id: 'cycle_id'
+  order: 'order',
+  durationDays: 'durationDays',
+  isActive: 'isActive',
+  startAt: 'startAt',
+  endAt: 'endAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
-export type LightsScalarFieldEnum = (typeof LightsScalarFieldEnum)[keyof typeof LightsScalarFieldEnum]
+export type GrowPhaseScalarFieldEnum = (typeof GrowPhaseScalarFieldEnum)[keyof typeof GrowPhaseScalarFieldEnum]
 
 
-export const SensorsScalarFieldEnum = {
+export const DeviceConfigScalarFieldEnum = {
   id: 'id',
-  name: 'name',
-  description: 'description',
-  cycle_id: 'cycle_id'
+  growPhaseId: 'growPhaseId',
+  deviceId: 'deviceId',
+  triggerType: 'triggerType',
+  configData: 'configData',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
-export type SensorsScalarFieldEnum = (typeof SensorsScalarFieldEnum)[keyof typeof SensorsScalarFieldEnum]
+export type DeviceConfigScalarFieldEnum = (typeof DeviceConfigScalarFieldEnum)[keyof typeof DeviceConfigScalarFieldEnum]
 
 
-export const PhaseLightSchedulesScalarFieldEnum = {
-  phase_id: 'phase_id',
-  light_id: 'light_id',
-  trigger_on_time: 'trigger_on_time',
-  trigger_off_time: 'trigger_off_time'
-} as const
-
-export type PhaseLightSchedulesScalarFieldEnum = (typeof PhaseLightSchedulesScalarFieldEnum)[keyof typeof PhaseLightSchedulesScalarFieldEnum]
-
-
-export const TemperatureScalarFieldEnum = {
+export const TelemetryScalarFieldEnum = {
   id: 'id',
-  sensor_id: 'sensor_id',
-  phase_id: 'phase_id',
+  growCycleId: 'growCycleId',
+  sensorType: 'sensorType',
   value: 'value',
-  created_at: 'created_at'
+  createdAt: 'createdAt'
 } as const
 
-export type TemperatureScalarFieldEnum = (typeof TemperatureScalarFieldEnum)[keyof typeof TemperatureScalarFieldEnum]
+export type TelemetryScalarFieldEnum = (typeof TelemetryScalarFieldEnum)[keyof typeof TelemetryScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -968,12 +980,36 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+export const JsonNullValueInput = {
+  JsonNull: JsonNull
+} as const
+
+export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
 } as const
 
 export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+export const NullsOrder = {
+  first: 'first',
+  last: 'last'
+} as const
+
+export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
+
+
+export const JsonNullValueFilter = {
+  DbNull: DbNull,
+  JsonNull: JsonNull,
+  AnyNull: AnyNull
+} as const
+
+export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -997,20 +1033,6 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
- * Reference to a field of type 'CycleType'
- */
-export type EnumCycleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CycleType'>
-    
-
-
-/**
- * Reference to a field of type 'CycleType[]'
- */
-export type ListEnumCycleTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'CycleType[]'>
-    
-
-
-/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -1025,37 +1047,16 @@ export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
 
 
 /**
- * Reference to a field of type 'PhaseType'
+ * Reference to a field of type 'DeviceType'
  */
-export type EnumPhaseTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PhaseType'>
+export type EnumDeviceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceType'>
     
 
 
 /**
- * Reference to a field of type 'PhaseType[]'
+ * Reference to a field of type 'DeviceType[]'
  */
-export type ListEnumPhaseTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'PhaseType[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-/**
- * Reference to a field of type 'Float'
- */
-export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
-    
-
-
-/**
- * Reference to a field of type 'Float[]'
- */
-export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+export type ListEnumDeviceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceType[]'>
     
 
 
@@ -1070,6 +1071,55 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
+ * Reference to a field of type 'TriggerType'
+ */
+export type EnumTriggerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TriggerType'>
+    
+
+
+/**
+ * Reference to a field of type 'TriggerType[]'
+ */
+export type ListEnumTriggerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TriggerType[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Json'
+ */
+export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
+    
+
+
+/**
+ * Reference to a field of type 'QueryMode'
+ */
+export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 /**
@@ -1182,12 +1232,12 @@ export type PrismaClientOptions = ({
   queryPlanCacheMaxSize?: number
 }
 export type GlobalOmitConfig = {
-  cycles?: Prisma.CyclesOmit
-  phases?: Prisma.PhasesOmit
-  lights?: Prisma.LightsOmit
-  sensors?: Prisma.SensorsOmit
-  phaseLightSchedules?: Prisma.PhaseLightSchedulesOmit
-  temperature?: Prisma.TemperatureOmit
+  controller?: Prisma.ControllerOmit
+  device?: Prisma.DeviceOmit
+  growCycle?: Prisma.GrowCycleOmit
+  growPhase?: Prisma.GrowPhaseOmit
+  deviceConfig?: Prisma.DeviceConfigOmit
+  telemetry?: Prisma.TelemetryOmit
 }
 
 /* Types for Logging */

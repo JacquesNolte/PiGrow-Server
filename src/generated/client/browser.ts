@@ -18,32 +18,32 @@ export { Prisma }
 export * as $Enums from './enums.js'
 export * from './enums.js';
 /**
- * Model Cycles
+ * Model Controller
  * 
  */
-export type Cycles = Prisma.CyclesModel
+export type Controller = Prisma.ControllerModel
 /**
- * Model Phases
+ * Model Device
  * 
  */
-export type Phases = Prisma.PhasesModel
+export type Device = Prisma.DeviceModel
 /**
- * Model Lights
+ * Model GrowCycle
  * 
  */
-export type Lights = Prisma.LightsModel
+export type GrowCycle = Prisma.GrowCycleModel
 /**
- * Model Sensors
+ * Model GrowPhase
  * 
  */
-export type Sensors = Prisma.SensorsModel
+export type GrowPhase = Prisma.GrowPhaseModel
 /**
- * Model PhaseLightSchedules
+ * Model DeviceConfig
  * 
  */
-export type PhaseLightSchedules = Prisma.PhaseLightSchedulesModel
+export type DeviceConfig = Prisma.DeviceConfigModel
 /**
- * Model Temperature
+ * Model Telemetry
  * 
  */
-export type Temperature = Prisma.TemperatureModel
+export type Telemetry = Prisma.TelemetryModel

@@ -9,18 +9,27 @@
 * 🟢 You can import this file directly.
 */
 
-export const CycleType = {
-  GROW: 'GROW'
+export const DeviceType = {
+  LIGHT: 'LIGHT',
+  EXHAUST_FAN: 'EXHAUST_FAN',
+  INTAKE_FAN: 'INTAKE_FAN',
+  CIRCULATION_FAN: 'CIRCULATION_FAN',
+  WATER_PUMP: 'WATER_PUMP',
+  AIR_CONDITIONER: 'AIR_CONDITIONER',
+  HEATER: 'HEATER',
+  HUMIDIFIER: 'HUMIDIFIER',
+  DEHUMIDIFIER: 'DEHUMIDIFIER',
+  CO2_INJECTOR: 'CO2_INJECTOR'
 } as const
 
-export type CycleType = (typeof CycleType)[keyof typeof CycleType]
+export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]
 
 
-export const PhaseType = {
-  PROPOGATION: 'PROPOGATION',
-  VEG: 'VEG',
-  FLOWER: 'FLOWER',
-  CURING: 'CURING'
+export const TriggerType = {
+  SCHEDULE: 'SCHEDULE',
+  THRESHOLD: 'THRESHOLD',
+  ALWAYS_ON: 'ALWAYS_ON',
+  ALWAYS_OFF: 'ALWAYS_OFF'
 } as const
 
-export type PhaseType = (typeof PhaseType)[keyof typeof PhaseType]
+export type TriggerType = (typeof TriggerType)[keyof typeof TriggerType]
