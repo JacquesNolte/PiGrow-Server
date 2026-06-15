@@ -14,7 +14,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
 
   // 1. GET ALL HARDWARE ASSIGNED TO A SPECIFIC PI
   router.get(
-    "/devices/controller/:controllerId",
+    "/api/devices/controller/:controllerId",
     { schema: { params: DeviceParamsControllerIdSchema } },
     async (request, reply) => {
       try {
@@ -31,7 +31,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
 
   // 2. GET SINGLE DEVICE SPECIFICATIONS
   router.get(
-    "/device/:id",
+    "/api/device/:id",
     { schema: { params: DeviceParamsIdSchema } },
     async (request, reply) => {
       try {
@@ -46,7 +46,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
 
   // 3. PROVISION A NEW DEVICE ONTO A PI
   router.post(
-    "/device",
+    "/api/device",
     { schema: { body: CreateDeviceSchema } },
     async (request, reply) => {
       try {
@@ -63,7 +63,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
 
   // 4. CHANGE DEVICE CONFIGURATION OR GPIO PIN
   router.put(
-    "/device/:id",
+    "/api/device/:id",
     { schema: { params: DeviceParamsIdSchema, body: UpdateDeviceSchema } },
     async (request, reply) => {
       try {
@@ -79,7 +79,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
 
   // 5. UNMAP / REMOVE A DEVICE
   router.delete(
-    "/device/:id",
+    "/api/device/:id",
     { schema: { params: DeviceParamsIdSchema } },
     async (request, reply) => {
       try {

@@ -12,15 +12,16 @@ export default async function controllerRoutes(server: FastifyInstance) {
   const controller = new ControllersController(server);
 
   // 1. GET ALL REGISTERED RASPBERRY PIS
-  router.get("/controllers", async (request, reply) => {
+  router.get("/api/controllers", async (request, reply) => {
     return await controller.getAllControllers();
   });
 
   // 2. GET SINGLE HUBS SYSTEM TOPOLOGY
   router.get(
-    "/controller/:id",
+    "/api/controllers/:id",
     { schema: { params: ControllerParamsIdSchema } },
     async (request, reply) => {
+      console.log({ request });
       try {
         return await controller.getControllerById(request.params.id);
       } catch (error) {
@@ -33,7 +34,7 @@ export default async function controllerRoutes(server: FastifyInstance) {
 
   // 3. REGISTER / HEARTBEAT PROVISION APPARATUS
   router.post(
-    "/controller",
+    "/api/controllers",
     { schema: { body: CreateControllerSchema } },
     async (request, reply) => {
       try {
@@ -50,7 +51,7 @@ export default async function controllerRoutes(server: FastifyInstance) {
 
   // 4. ALTER METADATA OR STATUS SIGNAL
   router.put(
-    "/controller/:id",
+    "/api/controllers/:id",
     {
       schema: {
         params: ControllerParamsIdSchema,
@@ -74,7 +75,7 @@ export default async function controllerRoutes(server: FastifyInstance) {
 
   // 5. UNREGISTER HUB APPARATUS
   router.delete(
-    "/controller/:id",
+    "/api/controllers/:id",
     { schema: { params: ControllerParamsIdSchema } },
     async (request, reply) => {
       try {

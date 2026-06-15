@@ -16,7 +16,7 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
 
   // 1. READ ALL PHASES FOR A SPECIFIC GROW CYCLE
   router.get(
-    "/grow-phases/cycle/:growCycleId",
+    "/api/grow-phases/cycle/:growCycleId",
     { schema: { params: GrowPhaseParamsCycleIdSchema } },
     async (request, reply) => {
       try {
@@ -32,7 +32,7 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
 
   // 2. READ ONE INDIVIDUAL PHASE
   router.get(
-    "/grow-phase/:id",
+    "/api/grow-phases/:id",
     { schema: { params: GrowPhaseParamsIdSchema } },
     async (request, reply) => {
       try {
@@ -45,7 +45,7 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
 
   // 3. CREATE A CUSTOM PHASE MANUALLY
   router.post(
-    "/grow-phase",
+    "/api/grow-phases",
     { schema: { body: CreateGrowPhaseSchema } },
     async (request, reply) => {
       try {
@@ -62,7 +62,7 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
 
   // 4. UPDATE A PHASE'S TARGET PARAMETERS
   router.put(
-    "/grow-phase/:id",
+    "/api/grow-phases/:id",
     {
       schema: { params: GrowPhaseParamsIdSchema, body: UpdateGrowPhaseSchema },
     },
@@ -83,7 +83,7 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
 
   // 5. DELETE A PHASE
   router.delete(
-    "/grow-phase/:id",
+    "/api/grow-phases/:id",
     { schema: { params: GrowPhaseParamsIdSchema } },
     async (request, reply) => {
       try {

@@ -5,7 +5,8 @@ import { handleTelemetry } from "./mqtt-handlers/telemetry-handler.js";
 import mqttMatch from "mqtt-match";
 import { Server as SocketIOServer } from "socket.io";
 import prismaPlugin from "./plugins/prisma.js";
-import cycleRoutes from "./api/modules/grow-cycles/grow-cycles.routes.js";
+import growCycleRoutes from "./api/modules/grow-cycles/grow-cycles.routes.js";
+import controllerRoutes from "./api/modules/controllers/controllers.route.js";
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({ logger: true });
@@ -83,7 +84,8 @@ mqttClient.on("message", (topic: string, message: Buffer) => {
 });
 
 await fastify.register(prismaPlugin);
-await fastify.register(cycleRoutes);
+await fastify.register(growCycleRoutes);
+await fastify.register(controllerRoutes);
 
 // 5. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)
 const start = async () => {

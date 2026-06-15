@@ -24,7 +24,7 @@ describe("Controllers API Feature Module", () => {
   test("POST /controller - Should register a new Raspberry Pi hardware hub", async () => {
     const response = await app.inject({
       method: "POST",
-      url: "/controller",
+      url: "/api/controllers",
       payload: {
         macAddress: "b8:27:eb:bf:d3:42",
         name: "Main Research Tent Pi Layer",
@@ -47,7 +47,7 @@ describe("Controllers API Feature Module", () => {
   test("GET /controllers - Should return list of all active hubs", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/controllers",
+      url: "/api/controllers",
     });
 
     const body = JSON.parse(response.body);

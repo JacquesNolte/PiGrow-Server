@@ -14,13 +14,13 @@ export default async function growCycleRoutes(server: FastifyInstance) {
   const controller = new GrowCyclesController(server);
 
   // 1. READ ALL
-  router.get("/grow-cycles", async (request, reply) => {
+  router.get("/api/grow-cycles", async (request, reply) => {
     return await controller.getAllGrowCycles();
   });
 
   // 2. READ ONE
   router.get(
-    "/grow-cycle/:id",
+    "/api/grow-cycles/:id",
     { schema: { params: GrowCycleParamsIdSchema } },
     async (request, reply) => {
       try {
@@ -33,7 +33,7 @@ export default async function growCycleRoutes(server: FastifyInstance) {
 
   // 3. CREATE
   router.post(
-    "/grow-cycle",
+    "/api/grow-cycles",
     { schema: { body: CreateGrowCycleSchema } },
     async (request, reply) => {
       try {
@@ -50,7 +50,7 @@ export default async function growCycleRoutes(server: FastifyInstance) {
 
   // 4. UPDATE
   router.put(
-    "/grow-cycle/:id",
+    "/api/grow-cycles/:id",
     {
       schema: { params: GrowCycleParamsIdSchema, body: UpdateGrowCycleSchema },
     },
@@ -71,7 +71,7 @@ export default async function growCycleRoutes(server: FastifyInstance) {
 
   // 5. DELETE
   router.delete(
-    "/grow-cycle/:id",
+    "/api/grow-cycles/:id",
     { schema: { params: GrowCycleParamsIdSchema } },
     async (request, reply) => {
       try {
