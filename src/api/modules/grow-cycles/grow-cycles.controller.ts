@@ -1,5 +1,12 @@
 import { FastifyInstance } from "fastify";
 
+export class SkipPhaseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "SkipPhaseError";
+  }
+}
+
 export class GrowCyclesController {
   private prisma;
 
@@ -261,5 +268,184 @@ export class GrowCyclesController {
     await this.prisma.growCycle.delete({
       where: { id },
     });
+  }
+
+  // 6. SKIP ACTIVE PHASE
+  // Trims the active phase's remaining days, cascades the date shift across
+  // all subsequent phases, and activates the next phase — atomically.
+  async skipPhase(id: string, todayOverride?: string) {
+    const cycle = await this.prisma.growCycle.findUniqueOrThrow({
+      where: { id },
+      include: {
+        phases: {
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+
+    if (!cycle.startAt) {
+      throw new SkipPhaseError("Grow cycle has not started yet");
+    }
+
+    const today = todayOverride ?? this.formatDateOnly(new Date());
+    if (!today) {
+      throw new SkipPhaseError("Server could not determine today's date");
+    }
+
+    // Canonicalize every phase's startAt/endAt from cycle.startAt + cumulative durations
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+
+    // Find the active phase: today >= startAt && today < endAt (lex on YYYY-MM-DD)
+    const activeIdx = cycle.phases.findIndex(
+      (p) =>
+        p.startAt &&
+        p.endAt &&
+        today >= this.formatDateOnly(p.startAt)! &&
+        today < this.formatDateOnly(p.endAt)!,
+    );
+
+    if (activeIdx < 0) {
+      throw new SkipPhaseError("No active phase to skip");
+    }
+
+    if (activeIdx === cycle.phases.length - 1) {
+      throw new SkipPhaseError("Cannot skip the final grow phase");
+    }
+
+    const active = cycle.phases[activeIdx];
+    const elapsed = this.daysBetween(active.startAt!, today);
+    active.durationDays = elapsed; // 0 allowed when phase started today
+
+    // Re-cascade with the new duration so every phase gets shifted startAt/endAt
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+
+    const next = cycle.phases[activeIdx + 1];
+
+    await this.prisma.$transaction([
+      // Clear isActive on all phases in the cycle
+      this.prisma.growPhase.updateMany({
+        where: { growCycleId: id },
+        data: { isActive: false },
+      }),
+      // Activate the next phase (the one immediately after the skipped one)
+      this.prisma.growPhase.update({
+        where: { id: next.id },
+        data: { isActive: true },
+      }),
+      // Persist every phase's canonicalized startAt/endAt + the active phase's
+      // new durationDays. Writing all phases makes this endpoint the single
+      // source of truth for phase date derivation.
+      ...cycle.phases.map((p) =>
+        this.prisma.growPhase.update({
+          where: { id: p.id },
+          data: {
+            durationDays:
+              p.id === active.id ? elapsed : p.durationDays,
+            startAt: p.startAt,
+            endAt: p.endAt,
+          },
+        }),
+      ),
+    ]);
+
+    return this.getGrowCycleById(id);
+  }
+
+  // 7. END GROW
+  // Trims the active phase's remaining days, canonicalizes all dates, marks
+  // the cycle inactive, and deactivates all phases — atomically. Works from
+  // any active phase; the FE chooses when to expose the option.
+  async endGrow(id: string, todayOverride?: string) {
+    const cycle = await this.prisma.growCycle.findUniqueOrThrow({
+      where: { id },
+      include: {
+        phases: {
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+
+    if (!cycle.startAt) {
+      throw new SkipPhaseError("Grow cycle has not started yet");
+    }
+
+    const today = todayOverride ?? this.formatDateOnly(new Date());
+    if (!today) {
+      throw new SkipPhaseError("Server could not determine today's date");
+    }
+
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+
+    const activeIdx = cycle.phases.findIndex(
+      (p) =>
+        p.startAt &&
+        p.endAt &&
+        today >= this.formatDateOnly(p.startAt)! &&
+        today < this.formatDateOnly(p.endAt)!,
+    );
+
+    if (activeIdx < 0) {
+      throw new SkipPhaseError("No active phase to end");
+    }
+
+    const active = cycle.phases[activeIdx];
+    const elapsed = this.daysBetween(active.startAt!, today);
+    active.durationDays = elapsed; // 0 allowed when phase started today
+
+    // Re-cascade with the new duration so every phase gets the canonical dates
+    this.recalculatePhaseDates(cycle.phases, cycle.startAt);
+
+    await this.prisma.$transaction([
+      // Deactivate every phase in the cycle
+      this.prisma.growPhase.updateMany({
+        where: { growCycleId: id },
+        data: { isActive: false },
+      }),
+      // Mark the grow cycle as inactive
+      this.prisma.growCycle.update({
+        where: { id },
+        data: { isActive: false },
+      }),
+      // Persist every phase's canonicalized startAt/endAt + the active phase's
+      // new durationDays.
+      ...cycle.phases.map((p) =>
+        this.prisma.growPhase.update({
+          where: { id: p.id },
+          data: {
+            durationDays:
+              p.id === active.id ? elapsed : p.durationDays,
+            startAt: p.startAt,
+            endAt: p.endAt,
+          },
+        }),
+      ),
+    ]);
+
+    return this.getGrowCycleById(id);
+  }
+
+  // Recompute every phase's startAt/endAt from cycle.startAt + cumulative durations.
+  // Mutates the passed array in place (matches FE's recalculatePhaseDates).
+  private recalculatePhaseDates(
+    phases: { startAt: Date | null; endAt: Date | null; durationDays: number }[],
+    growStart: Date,
+  ): void {
+    const cursor = new Date(growStart);
+    cursor.setUTCHours(0, 0, 0, 0);
+    for (const phase of phases) {
+      phase.startAt = new Date(cursor);
+      cursor.setUTCDate(cursor.getUTCDate() + phase.durationDays);
+      phase.endAt = new Date(cursor);
+    }
+  }
+
+  // Whole-day difference between two dates (date-only, UTC).
+  private daysBetween(from: Date, todayStr: string): number {
+    const fromDate = new Date(from);
+    fromDate.setUTCHours(0, 0, 0, 0);
+    const toDate = new Date(`${todayStr}T00:00:00Z`);
+    toDate.setUTCHours(0, 0, 0, 0);
+    const diffMs = toDate.getTime() - fromDate.getTime();
+    return Math.max(0, Math.floor(diffMs / 86_400_000));
   }
 }
