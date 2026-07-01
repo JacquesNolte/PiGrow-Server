@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import { Type } from "@sinclair/typebox";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import {
   GrowCyclesController,
@@ -10,7 +11,12 @@ import {
   UpdateGrowCycleSchema,
   GrowCycleParamsIdSchema,
   SkipPhaseQuerySchema,
+  GrowCycleArrayResponseSchema,
+  GrowCycleDetailResponseSchema,
+  GrowCycleUpdateResponseSchema,
+  ErrorSchema,
 } from "./grow-cycles.schema.js";
+import { cast } from "../../shared/cast.js";
 
 export default async function growCycleRoutes(server: FastifyInstance) {
   const router = server.withTypeProvider<TypeBoxTypeProvider>();
@@ -19,17 +25,41 @@ export default async function growCycleRoutes(server: FastifyInstance) {
   const controller = new GrowCyclesController(server);
 
   // 1. READ ALL
-  router.get("/api/grow-cycles", async (request, reply) => {
-    return await controller.getAllGrowCycles();
-  });
+  router.get(
+    "/api/grow-cycles",
+    {
+      schema: {
+        tags: ["GrowCycles"],
+        summary: "List all grow cycles",
+        response: { 200: GrowCycleArrayResponseSchema },
+      },
+    },
+    async () => {
+      return cast<typeof GrowCycleArrayResponseSchema.static>(
+        await controller.getAllGrowCycles(),
+      );
+    },
+  );
 
   // 2. READ ONE
   router.get(
     "/api/grow-cycles/:id",
-    { schema: { params: GrowCycleParamsIdSchema } },
+    {
+      schema: {
+        tags: ["GrowCycles"],
+        summary: "Get one grow cycle with its phases + environments",
+        params: GrowCycleParamsIdSchema,
+        response: {
+          200: GrowCycleDetailResponseSchema,
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getGrowCycleById(request.params.id);
+        return cast<typeof GrowCycleDetailResponseSchema.static>(
+          await controller.getGrowCycleById(request.params.id),
+        );
       } catch (error) {
         return reply.code(404).send({ error: "Grow cycle record not found" });
       }
@@ -39,11 +69,24 @@ export default async function growCycleRoutes(server: FastifyInstance) {
   // 3. CREATE
   router.post(
     "/api/grow-cycles",
-    { schema: { body: CreateGrowCycleSchema } },
+    {
+      schema: {
+        tags: ["GrowCycles"],
+        summary: "Create a new grow cycle",
+        body: CreateGrowCycleSchema,
+        response: {
+          201: GrowCycleDetailResponseSchema,
+          400: ErrorSchema,
+          409: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         const newGrowCycle = await controller.createGrowCycle(request.body);
-        return reply.code(201).send(newGrowCycle);
+        return reply.code(201).send(
+          cast<typeof GrowCycleDetailResponseSchema.static>(newGrowCycle),
+        );
       } catch (error) {
         if (error instanceof ControllerBusyError) {
           return reply.code(409).send({ error: error.message });
@@ -70,13 +113,25 @@ export default async function growCycleRoutes(server: FastifyInstance) {
   router.put(
     "/api/grow-cycles/:id",
     {
-      schema: { params: GrowCycleParamsIdSchema, body: UpdateGrowCycleSchema },
+      schema: {
+        tags: ["GrowCycles"],
+        summary: "Update a grow cycle",
+        params: GrowCycleParamsIdSchema,
+        body: UpdateGrowCycleSchema,
+        response: {
+          200: GrowCycleUpdateResponseSchema,
+          400: ErrorSchema,
+          409: ErrorSchema,
+        },
+      },
     },
     async (request, reply) => {
       try {
-        return await controller.updateGrowCycle(
-          request.params.id,
-          request.body,
+        return cast<typeof GrowCycleUpdateResponseSchema.static>(
+          await controller.updateGrowCycle(
+            request.params.id,
+            request.body,
+          ),
         );
       } catch (error) {
         if (error instanceof ControllerBusyError) {
@@ -103,11 +158,21 @@ export default async function growCycleRoutes(server: FastifyInstance) {
   // 5. DELETE
   router.delete(
     "/api/grow-cycles/:id",
-    { schema: { params: GrowCycleParamsIdSchema } },
+    {
+      schema: {
+        tags: ["GrowCycles"],
+        summary: "Delete a grow cycle",
+        params: GrowCycleParamsIdSchema,
+        response: {
+          204: Type.Null({ description: "Grow cycle deleted (no content)" }),
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         await controller.deleteGrowCycle(request.params.id);
-        return reply.code(204).send();
+        return reply.code(204).send(null);
       } catch (error) {
         return reply.code(404).send({ error: "Record could not be deleted" });
       }
@@ -119,15 +184,26 @@ export default async function growCycleRoutes(server: FastifyInstance) {
     "/api/grow-cycles/:id/skip-phase",
     {
       schema: {
+        tags: ["GrowCycles"],
+        summary: "Skip the currently active grow phase",
+        description:
+          "Atomically ends the active phase, re-computes each phase's `startAt`/`endAt`, and activates the next phase.",
         params: GrowCycleParamsIdSchema,
         querystring: SkipPhaseQuerySchema,
+        response: {
+          200: GrowCycleDetailResponseSchema,
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
       },
     },
     async (request, reply) => {
       try {
-        return await controller.skipPhase(
-          request.params.id,
-          request.query.today,
+        return cast<typeof GrowCycleDetailResponseSchema.static>(
+          await controller.skipPhase(
+            request.params.id,
+            request.query.today,
+          ),
         );
       } catch (error) {
         if (error instanceof SkipPhaseError) {
@@ -156,15 +232,26 @@ export default async function growCycleRoutes(server: FastifyInstance) {
     "/api/grow-cycles/:id/end-grow",
     {
       schema: {
+        tags: ["GrowCycles"],
+        summary: "End the entire grow cycle",
+        description:
+          "Atomically ends the active phase, marks the cycle inactive, and persists the final phase dates.",
         params: GrowCycleParamsIdSchema,
         querystring: SkipPhaseQuerySchema,
+        response: {
+          200: GrowCycleDetailResponseSchema,
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
       },
     },
     async (request, reply) => {
       try {
-        return await controller.endGrow(
-          request.params.id,
-          request.query.today,
+        return cast<typeof GrowCycleDetailResponseSchema.static>(
+          await controller.endGrow(
+            request.params.id,
+            request.query.today,
+          ),
         );
       } catch (error) {
         if (error instanceof SkipPhaseError) {

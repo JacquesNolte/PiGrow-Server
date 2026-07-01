@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import { Type } from "@sinclair/typebox";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import {
   AutomationRulesController,
@@ -11,7 +12,12 @@ import {
   AutomationRuleDeviceParamsSchema,
   CreateAutomationRuleSchema,
   UpdateAutomationRuleSchema,
+  AutomationRuleArrayResponseSchema,
+  AutomationRuleResponseSchema,
+  AutomationRuleToggleResponseSchema,
+  ErrorSchema,
 } from "./automation-rules.schema.js";
+import { cast } from "../../shared/cast.js";
 
 export default async function automationRuleRoutes(server: FastifyInstance) {
   const router = server.withTypeProvider<TypeBoxTypeProvider>();
@@ -20,10 +26,19 @@ export default async function automationRuleRoutes(server: FastifyInstance) {
   // 1. LIST by grow cycle
   router.get(
     "/api/automation-rules/grow-cycle/:growCycleId",
-    { schema: { params: AutomationRuleGrowCycleParamsSchema } },
+    {
+      schema: {
+        tags: ["AutomationRules"],
+        summary: "List cycle-scoped automation rules",
+        params: AutomationRuleGrowCycleParamsSchema,
+        response: { 200: AutomationRuleArrayResponseSchema, 400: ErrorSchema },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getByGrowCycleId(request.params.growCycleId);
+        return cast<typeof AutomationRuleArrayResponseSchema.static>(
+          await controller.getByGrowCycleId(request.params.growCycleId),
+        );
       } catch (error) {
         return reply.code(400).send({ error: "Failed to load automation rules" });
       }
@@ -33,10 +48,19 @@ export default async function automationRuleRoutes(server: FastifyInstance) {
   // 2. LIST by grow phase
   router.get(
     "/api/automation-rules/grow-phase/:growPhaseId",
-    { schema: { params: AutomationRuleGrowPhaseParamsSchema } },
+    {
+      schema: {
+        tags: ["AutomationRules"],
+        summary: "List phase-scoped automation rules",
+        params: AutomationRuleGrowPhaseParamsSchema,
+        response: { 200: AutomationRuleArrayResponseSchema, 400: ErrorSchema },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getByGrowPhaseId(request.params.growPhaseId);
+        return cast<typeof AutomationRuleArrayResponseSchema.static>(
+          await controller.getByGrowPhaseId(request.params.growPhaseId),
+        );
       } catch (error) {
         return reply.code(400).send({ error: "Failed to load automation rules" });
       }
@@ -46,10 +70,19 @@ export default async function automationRuleRoutes(server: FastifyInstance) {
   // 3. LIST by device
   router.get(
     "/api/automation-rules/device/:deviceId",
-    { schema: { params: AutomationRuleDeviceParamsSchema } },
+    {
+      schema: {
+        tags: ["AutomationRules"],
+        summary: "List automation rules attached to a device",
+        params: AutomationRuleDeviceParamsSchema,
+        response: { 200: AutomationRuleArrayResponseSchema, 400: ErrorSchema },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getByDeviceId(request.params.deviceId);
+        return cast<typeof AutomationRuleArrayResponseSchema.static>(
+          await controller.getByDeviceId(request.params.deviceId),
+        );
       } catch (error) {
         return reply.code(400).send({ error: "Failed to load automation rules" });
       }
@@ -59,14 +92,30 @@ export default async function automationRuleRoutes(server: FastifyInstance) {
   // 4. CREATE
   router.post(
     "/api/automation-rules",
-    { schema: { body: CreateAutomationRuleSchema } },
+    {
+      schema: {
+        tags: ["AutomationRules"],
+        summary: "Create an automation rule",
+        description:
+          "A rule is scoped to exactly one of `growPhaseId` (preferred) or `growCycleId`. SCHEDULE_ON / SCHEDULE_OFF conditions are rejected at the controller.",
+        body: CreateAutomationRuleSchema,
+        response: {
+          201: AutomationRuleResponseSchema,
+          400: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         const rule = await controller.create(request.body);
-        return reply.code(201).send(rule);
+        return reply.code(201).send(
+          cast<typeof AutomationRuleResponseSchema.static>(rule),
+        );
       } catch (error) {
         if (error instanceof AutomationRulesError) {
-          return reply.code(error.statusCode).send({ error: error.message });
+          return reply
+            .code(error.statusCode as 400)
+            .send({ error: error.message });
         }
         if (
           typeof error === "object" &&
@@ -89,16 +138,27 @@ export default async function automationRuleRoutes(server: FastifyInstance) {
     "/api/automation-rules/:id",
     {
       schema: {
+        tags: ["AutomationRules"],
+        summary: "Update an automation rule",
         params: AutomationRuleIdParamsSchema,
         body: UpdateAutomationRuleSchema,
+        response: {
+          200: AutomationRuleResponseSchema,
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
       },
     },
     async (request, reply) => {
       try {
-        return await controller.update(request.params.id, request.body);
+        return cast<typeof AutomationRuleResponseSchema.static>(
+          await controller.update(request.params.id, request.body),
+        );
       } catch (error) {
         if (error instanceof AutomationRulesError) {
-          return reply.code(error.statusCode).send({ error: error.message });
+          return reply
+            .code(error.statusCode as 400)
+            .send({ error: error.message });
         }
         if (
           typeof error === "object" &&
@@ -117,10 +177,23 @@ export default async function automationRuleRoutes(server: FastifyInstance) {
   // 6. TOGGLE enabled
   router.patch(
     "/api/automation-rules/:id/toggle",
-    { schema: { params: AutomationRuleIdParamsSchema } },
+    {
+      schema: {
+        tags: ["AutomationRules"],
+        summary: "Toggle an automation rule's enabled flag",
+        params: AutomationRuleIdParamsSchema,
+        response: {
+          200: AutomationRuleToggleResponseSchema,
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.toggle(request.params.id);
+        return cast<typeof AutomationRuleToggleResponseSchema.static>(
+          await controller.toggle(request.params.id),
+        );
       } catch (error) {
         if (
           typeof error === "object" &&
@@ -138,11 +211,22 @@ export default async function automationRuleRoutes(server: FastifyInstance) {
   // 7. DELETE
   router.delete(
     "/api/automation-rules/:id",
-    { schema: { params: AutomationRuleIdParamsSchema } },
+    {
+      schema: {
+        tags: ["AutomationRules"],
+        summary: "Delete an automation rule",
+        params: AutomationRuleIdParamsSchema,
+        response: {
+          204: Type.Null({ description: "Automation rule deleted (no content)" }),
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         await controller.remove(request.params.id);
-        return reply.code(204).send();
+        return reply.code(204).send(null);
       } catch (error) {
         if (
           typeof error === "object" &&

@@ -5,6 +5,7 @@ import { handleDeviceState } from "./mqtt-handlers/device-state-handler.js";
 import mqttMatch from "mqtt-match";
 import { Server as SocketIOServer } from "socket.io";
 import prismaPlugin from "./plugins/prisma.js";
+import swaggerPlugin from "./plugins/swagger.js";
 import growCycleRoutes from "./api/modules/grow-cycles/grow-cycles.routes.js";
 import growPhaseRoutes from "./api/modules/grow-phases/grow-phases.routes.js";
 import phaseEnvironmentRoutes from "./api/modules/phase-environments/phase-environments.routes.js";
@@ -120,6 +121,7 @@ mqttClient.on("message", (topic: string, message: Buffer) => {
 });
 
 await fastify.register(prismaPlugin);
+await fastify.register(swaggerPlugin, { withUi: true });
 await fastify.register(growCycleRoutes);
 await fastify.register(growPhaseRoutes);
 await fastify.register(phaseEnvironmentRoutes);

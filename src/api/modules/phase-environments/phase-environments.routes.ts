@@ -1,11 +1,16 @@
 import { FastifyInstance } from "fastify";
+import { Type } from "@sinclair/typebox";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { PhaseEnvironmentsController } from "./phase-environments.controller.js";
 import {
   PhaseEnvironmentPeriodParamsSchema,
   PhaseEnvironmentPhaseParamsSchema,
   UpsertPhaseEnvironmentSchema,
+  PhaseEnvironmentResponseSchema,
+  PhaseEnvironmentPairResponseSchema,
+  ErrorSchema,
 } from "./phase-environments.schema.js";
+import { cast } from "../../shared/cast.js";
 
 export default async function phaseEnvironmentRoutes(server: FastifyInstance) {
   const router = server.withTypeProvider<TypeBoxTypeProvider>();
@@ -14,10 +19,25 @@ export default async function phaseEnvironmentRoutes(server: FastifyInstance) {
   // 1. GET both DAY + NIGHT environment rows for a phase
   router.get(
     "/api/grow-phases/:growPhaseId/environment",
-    { schema: { params: PhaseEnvironmentPhaseParamsSchema } },
+    {
+      schema: {
+        tags: ["PhaseEnvironments"],
+        summary: "Get DAY + NIGHT environment rows for a phase",
+        description:
+          "Returns both period rows for the phase. A missing period comes back as `null` so the FE can tell DAY exists and NIGHT doesn't (or vice versa).",
+        params: PhaseEnvironmentPhaseParamsSchema,
+        response: {
+          200: PhaseEnvironmentPairResponseSchema,
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getByPhaseId(request.params.growPhaseId);
+        return cast<typeof PhaseEnvironmentPairResponseSchema.static>(
+          await controller.getByPhaseId(request.params.growPhaseId),
+        );
       } catch (error) {
         const status =
           (error as { statusCode?: number })?.statusCode ?? 400;
@@ -25,7 +45,7 @@ export default async function phaseEnvironmentRoutes(server: FastifyInstance) {
           status === 404
             ? "Grow phase record not found"
             : "Failed to load phase environment";
-        return reply.code(status).send({ error: msg });
+        return reply.code(status as 400).send({ error: msg });
       }
     },
   );
@@ -35,16 +55,27 @@ export default async function phaseEnvironmentRoutes(server: FastifyInstance) {
     "/api/grow-phases/:growPhaseId/environment/:period",
     {
       schema: {
+        tags: ["PhaseEnvironments"],
+        summary: "Upsert a DAY or NIGHT environment row for a phase",
+        description:
+          "Creates the row if it doesn't exist, replaces it if it does. Omitted fields are cleared to `null`.",
         params: PhaseEnvironmentPeriodParamsSchema,
         body: UpsertPhaseEnvironmentSchema,
+        response: {
+          200: PhaseEnvironmentResponseSchema,
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
       },
     },
     async (request, reply) => {
       try {
-        return await controller.upsert(
-          request.params.growPhaseId,
-          request.params.period,
-          request.body,
+        return cast<typeof PhaseEnvironmentResponseSchema.static>(
+          await controller.upsert(
+            request.params.growPhaseId,
+            request.params.period,
+            request.body,
+          ),
         );
       } catch (error) {
         const status =
@@ -53,7 +84,7 @@ export default async function phaseEnvironmentRoutes(server: FastifyInstance) {
           status === 404
             ? "Grow phase record not found"
             : "Failed to upsert phase environment";
-        return reply.code(status).send({ error: msg });
+        return reply.code(status as 400).send({ error: msg });
       }
     },
   );
@@ -61,14 +92,25 @@ export default async function phaseEnvironmentRoutes(server: FastifyInstance) {
   // 3. DELETE a period row
   router.delete(
     "/api/grow-phases/:growPhaseId/environment/:period",
-    { schema: { params: PhaseEnvironmentPeriodParamsSchema } },
+    {
+      schema: {
+        tags: ["PhaseEnvironments"],
+        summary: "Delete a DAY or NIGHT environment row for a phase",
+        params: PhaseEnvironmentPeriodParamsSchema,
+        response: {
+          204: Type.Null({ description: "Environment row deleted (no content)" }),
+          400: ErrorSchema,
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         await controller.remove(
           request.params.growPhaseId,
           request.params.period,
         );
-        return reply.code(204).send();
+        return reply.code(204).send(null);
       } catch (error) {
         const status =
           (error as { statusCode?: number })?.statusCode ?? 400;
@@ -76,7 +118,7 @@ export default async function phaseEnvironmentRoutes(server: FastifyInstance) {
           status === 404
             ? "Phase environment row not found"
             : "Failed to delete phase environment";
-        return reply.code(status).send({ error: msg });
+        return reply.code(status as 400).send({ error: msg });
       }
     },
   );

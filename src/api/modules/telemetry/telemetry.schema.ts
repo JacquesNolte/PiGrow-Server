@@ -1,4 +1,5 @@
 import { Type } from "@sinclair/typebox";
+import { ErrorSchema } from "../../shared/schemas.js";
 
 export const TelemetrySensorTypeSchema = Type.Union([
   Type.Literal("HUMIDITY"),
@@ -8,6 +9,30 @@ export const TelemetrySensorTypeSchema = Type.Union([
   Type.Literal("PH"),
   Type.Literal("EC"),
 ]);
+
+export const TelemetryResponseSchema = Type.Object({
+  id: Type.String({ format: "uuid" }),
+  growCycleId: Type.String({ format: "uuid" }),
+  sensorId: Type.String({ format: "uuid" }),
+  sensorType: TelemetrySensorTypeSchema,
+  value: Type.Number(),
+  createdAt: Type.String({ format: "date-time" }),
+  sensor: Type.Object({
+    id: Type.String({ format: "uuid" }),
+    name: Type.String(),
+    type: TelemetrySensorTypeSchema,
+    protocol: Type.Union([
+      Type.Literal("I2C"),
+      Type.Literal("SPI"),
+      Type.Literal("UART"),
+      Type.Literal("RS485"),
+    ]),
+  }),
+});
+
+export const TelemetryArrayResponseSchema = Type.Array(
+  TelemetryResponseSchema,
+);
 
 export const CreateTelemetrySchema = Type.Object({
   growCycleId: Type.String({
@@ -38,3 +63,5 @@ export const TelemetryRangeQuerySchema = Type.Object({
     description: "ISO 8601 end timestamp (inclusive)",
   }),
 });
+
+export { ErrorSchema };

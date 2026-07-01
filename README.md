@@ -57,7 +57,7 @@ Requires a running PostgreSQL instance and MQTT broker. See `.env` for `DATABASE
 
 ## API
 
-Full REST API reference in [`API.md`](./API.md). All routes under `/api`:
+All routes are mounted under `/api` and documented live via Swagger UI at **`http://localhost:4000/documentation`** (when the dev server is running). The same OpenAPI 3.0 document is committed to [`openapi.json`](./openapi.json) for offline reference and to keep PRs reviewable.
 
 - `/api/controllers` — Raspberry Pi controller management
 - `/api/devices` — GPIO device management (devices owned by Controller)
@@ -68,7 +68,14 @@ Full REST API reference in [`API.md`](./API.md). All routes under `/api`:
 - `/api/automation-rules` — explicit per-device trigger rules (lights on day/night schedule, fans/heaters on thresholds, etc.)
 - `/api/telemetry` — sensor telemetry ingestion and queries
 
-Day/night cycles, per-phase thresholds, and rule-based device control (lights, fans, heater, humidifier, CO2 injector) are described in [`API.md`](./API.md).
+Day/night cycles, per-phase thresholds, and rule-based device control (lights, fans, heater, humidifier, CO2 injector) are described in the live docs.
+
+To regenerate `openapi.json` after route or schema changes:
+
+```bash
+npm run openapi:export           # writes openapi.json
+npm run openapi:check            # fails CI if openapi.json is out of date
+```
 
 ## Docker
 

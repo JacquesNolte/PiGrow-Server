@@ -5,7 +5,11 @@ import {
   CreateTelemetrySchema,
   TelemetryParamsGrowCycleIdSchema,
   TelemetryRangeQuerySchema,
+  TelemetryArrayResponseSchema,
+  TelemetryResponseSchema,
+  ErrorSchema,
 } from "./telemetry.schema.js";
+import { cast } from "../../shared/cast.js";
 
 export default async function telemetryRoutes(server: FastifyInstance) {
   const router = server.withTypeProvider<TypeBoxTypeProvider>();
@@ -14,11 +18,21 @@ export default async function telemetryRoutes(server: FastifyInstance) {
   // 1. READ ALL TELEMETRY FOR A GROW CYCLE
   router.get(
     "/api/telemetry/grow-cycle/:growCycleId",
-    { schema: { params: TelemetryParamsGrowCycleIdSchema } },
+    {
+      schema: {
+        tags: ["Telemetry"],
+        summary: "List telemetry readings for a grow cycle",
+        description: "Returns every persisted telemetry row for the cycle, newest first, with the originating sensor summary.",
+        params: TelemetryParamsGrowCycleIdSchema,
+        response: { 200: TelemetryArrayResponseSchema, 400: ErrorSchema },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getByGrowCycleId(
-          request.params.growCycleId,
+        return cast<typeof TelemetryArrayResponseSchema.static>(
+          await controller.getByGrowCycleId(
+            request.params.growCycleId,
+          ),
         );
       } catch (error) {
         return reply
@@ -31,11 +45,21 @@ export default async function telemetryRoutes(server: FastifyInstance) {
   // 2. READ LATEST READING PER SENSOR TYPE
   router.get(
     "/api/telemetry/grow-cycle/:growCycleId/latest",
-    { schema: { params: TelemetryParamsGrowCycleIdSchema } },
+    {
+      schema: {
+        tags: ["Telemetry"],
+        summary: "Latest reading per physical sensor",
+        description: "Returns the most recent telemetry row per physical sensor on the cycle.",
+        params: TelemetryParamsGrowCycleIdSchema,
+        response: { 200: TelemetryArrayResponseSchema, 400: ErrorSchema },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getLatestByGrowCycleId(
-          request.params.growCycleId,
+        return cast<typeof TelemetryArrayResponseSchema.static>(
+          await controller.getLatestByGrowCycleId(
+            request.params.growCycleId,
+          ),
         );
       } catch (error) {
         return reply
@@ -50,16 +74,21 @@ export default async function telemetryRoutes(server: FastifyInstance) {
     "/api/telemetry/grow-cycle/:growCycleId/range",
     {
       schema: {
+        tags: ["Telemetry"],
+        summary: "Telemetry readings within a time range",
         params: TelemetryParamsGrowCycleIdSchema,
         querystring: TelemetryRangeQuerySchema,
+        response: { 200: TelemetryArrayResponseSchema, 400: ErrorSchema },
       },
     },
     async (request, reply) => {
       try {
-        return await controller.getByGrowCycleIdRange(
-          request.params.growCycleId,
-          request.query.from,
-          request.query.to,
+        return cast<typeof TelemetryArrayResponseSchema.static>(
+          await controller.getByGrowCycleIdRange(
+            request.params.growCycleId,
+            request.query.from,
+            request.query.to,
+          ),
         );
       } catch (error) {
         return reply
@@ -72,11 +101,25 @@ export default async function telemetryRoutes(server: FastifyInstance) {
   // 4. INGEST TELEMETRY
   router.post(
     "/api/telemetry",
-    { schema: { body: CreateTelemetrySchema } },
+    {
+      schema: {
+        tags: ["Telemetry"],
+        summary: "Ingest a single telemetry reading",
+        description:
+          "Persists a telemetry row. In the normal MQTT flow, the server resolves the sensor's controller's active grow cycle and writes one row per reading; readings with no active grow cycle are dropped with a warning.",
+        body: CreateTelemetrySchema,
+        response: {
+          201: TelemetryResponseSchema,
+          400: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         const reading = await controller.createTelemetry(request.body);
-        return reply.code(201).send(reading);
+        return reply.code(201).send(
+          cast<typeof TelemetryResponseSchema.static>(reading),
+        );
       } catch (error) {
         server.log.error(error);
         return reply

@@ -12,6 +12,7 @@ import sensorRoutes from "./sensors/sensors.routes.js";
 import telemetryRoutes from "./telemetry/telemetry.routes.js";
 import { prisma, closeDatabase } from "../../prisma.js";
 import { endMqtt } from "../../mqtt/client.js";
+import swaggerPlugin from "../../plugins/swagger.js";
 
 export async function createTestApp() {
   const server = Fastify({
@@ -26,6 +27,11 @@ export async function createTestApp() {
 
   // Attach a clean instance of your database client
   server.decorate("prisma", prisma);
+
+  // Mirror production swagger registration so route schemas (incl. response
+  // schemas) are validated during tests. The UI is intentionally NOT mounted
+  // in tests to keep the test app lean.
+  await server.register(swaggerPlugin, { withUi: false });
 
   // Unify all route clusters under the test execution context
   await server.register(controllerRoutes);

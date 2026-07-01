@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import { Type } from "@sinclair/typebox";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { GrowPhasesController } from "./grow-phases.controller.js";
 import {
@@ -6,7 +7,11 @@ import {
   UpdateGrowPhaseSchema,
   GrowPhaseParamsIdSchema,
   GrowPhaseParamsCycleIdSchema,
+  GrowPhaseResponseSchema,
+  GrowPhaseArrayResponseSchema,
+  ErrorSchema,
 } from "./grow-phases.schema.js";
+import { cast } from "../../shared/cast.js";
 
 export default async function growPhaseRoutes(server: FastifyInstance) {
   const router = server.withTypeProvider<TypeBoxTypeProvider>();
@@ -17,10 +22,20 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
   // 1. READ ALL PHASES FOR A SPECIFIC GROW CYCLE
   router.get(
     "/api/grow-phases/cycle/:growCycleId",
-    { schema: { params: GrowPhaseParamsCycleIdSchema } },
+    {
+      schema: {
+        tags: ["GrowPhases"],
+        summary: "List phases for a grow cycle",
+        description: "Returns every phase attached to the cycle, ordered by `order` ascending.",
+        params: GrowPhaseParamsCycleIdSchema,
+        response: { 200: GrowPhaseArrayResponseSchema, 400: ErrorSchema },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getPhasesByCycleId(request.params.growCycleId);
+        return cast<typeof GrowPhaseArrayResponseSchema.static>(
+          await controller.getPhasesByCycleId(request.params.growCycleId),
+        );
       } catch (error) {
         router.log.error(error);
         return reply
@@ -33,10 +48,22 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
   // 2. READ ONE INDIVIDUAL PHASE
   router.get(
     "/api/grow-phases/:id",
-    { schema: { params: GrowPhaseParamsIdSchema } },
+    {
+      schema: {
+        tags: ["GrowPhases"],
+        summary: "Get one grow phase",
+        params: GrowPhaseParamsIdSchema,
+        response: {
+          200: GrowPhaseResponseSchema,
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.getGrowPhaseById(request.params.id);
+        return cast<typeof GrowPhaseResponseSchema.static>(
+          await controller.getGrowPhaseById(request.params.id),
+        );
       } catch (error) {
         return reply.code(404).send({ error: "Grow phase record not found" });
       }
@@ -46,11 +73,23 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
   // 3. CREATE A CUSTOM PHASE MANUALLY
   router.post(
     "/api/grow-phases",
-    { schema: { body: CreateGrowPhaseSchema } },
+    {
+      schema: {
+        tags: ["GrowPhases"],
+        summary: "Create a new grow phase",
+        body: CreateGrowPhaseSchema,
+        response: {
+          201: GrowPhaseResponseSchema,
+          400: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         const newPhase = await controller.createGrowPhase(request.body);
-        return reply.code(201).send(newPhase);
+        return reply.code(201).send(
+          cast<typeof GrowPhaseResponseSchema.static>(newPhase),
+        );
       } catch (error) {
         router.log.error(error);
         return reply
@@ -64,13 +103,24 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
   router.put(
     "/api/grow-phases/:id",
     {
-      schema: { params: GrowPhaseParamsIdSchema, body: UpdateGrowPhaseSchema },
+      schema: {
+        tags: ["GrowPhases"],
+        summary: "Update a grow phase",
+        params: GrowPhaseParamsIdSchema,
+        body: UpdateGrowPhaseSchema,
+        response: {
+          200: GrowPhaseResponseSchema,
+          400: ErrorSchema,
+        },
+      },
     },
     async (request, reply) => {
       try {
-        return await controller.updateGrowPhase(
-          request.params.id,
-          request.body,
+        return cast<typeof GrowPhaseResponseSchema.static>(
+          await controller.updateGrowPhase(
+            request.params.id,
+            request.body,
+          ),
         );
       } catch (error) {
         router.log.error(error);
@@ -84,11 +134,21 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
   // 5. DELETE A PHASE
   router.delete(
     "/api/grow-phases/:id",
-    { schema: { params: GrowPhaseParamsIdSchema } },
+    {
+      schema: {
+        tags: ["GrowPhases"],
+        summary: "Delete a grow phase",
+        params: GrowPhaseParamsIdSchema,
+        response: {
+          204: Type.Null({ description: "Grow phase deleted (no content)" }),
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
         await controller.deleteGrowPhase(request.params.id);
-        return reply.code(204).send();
+        return reply.code(204).send(null);
       } catch (error) {
         return reply.code(404).send({ error: "Record could not be deleted" });
       }
@@ -98,10 +158,24 @@ export default async function growPhaseRoutes(server: FastifyInstance) {
   // 6. ACTIVATE A PHASE (sets isActive, clears all others in the same cycle)
   router.patch(
     "/api/grow-phases/:id/activate",
-    { schema: { params: GrowPhaseParamsIdSchema } },
+    {
+      schema: {
+        tags: ["GrowPhases"],
+        summary: "Activate a phase (deactivates siblings)",
+        description:
+          "Atomically deactivates every other phase in the same grow cycle and marks this one as `isActive: true`.",
+        params: GrowPhaseParamsIdSchema,
+        response: {
+          200: GrowPhaseResponseSchema,
+          404: ErrorSchema,
+        },
+      },
+    },
     async (request, reply) => {
       try {
-        return await controller.activatePhase(request.params.id);
+        return cast<typeof GrowPhaseResponseSchema.static>(
+          await controller.activatePhase(request.params.id),
+        );
       } catch (error) {
         return reply
           .code(404)

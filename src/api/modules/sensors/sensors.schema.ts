@@ -1,4 +1,5 @@
 import { Type } from "@sinclair/typebox";
+import { ErrorSchema } from "../../shared/schemas.js";
 
 export const SensorTypeSchema = Type.Union([
   Type.Literal("HUMIDITY"),
@@ -15,6 +16,30 @@ export const SensorProtocolSchema = Type.Union([
   Type.Literal("UART"),
   Type.Literal("RS485"),
 ]);
+
+export const SensorResponseSchema = Type.Object({
+  id: Type.String({ format: "uuid" }),
+  controllerId: Type.String({ format: "uuid" }),
+  name: Type.String(),
+  type: SensorTypeSchema,
+  mqttTopic: Type.String(),
+  pinNumbers: Type.Array(Type.Integer()),
+  protocol: SensorProtocolSchema,
+  lastActive: Type.Union([Type.String({ format: "date-time" }), Type.Null()]),
+  createdAt: Type.String({ format: "date-time" }),
+  updatedAt: Type.String({ format: "date-time" }),
+});
+
+export const SensorDetailResponseSchema = Type.Object({
+  ...SensorResponseSchema.properties,
+  controller: Type.Object({
+    id: Type.String({ format: "uuid" }),
+    name: Type.String(),
+    status: Type.String(),
+  }),
+});
+
+export const SensorArrayResponseSchema = Type.Array(SensorResponseSchema);
 
 export const SensorParamsIdSchema = Type.Object({
   id: Type.String({ format: "uuid" }),
@@ -48,3 +73,5 @@ export const UpdateSensorSchema = Type.Object({
     }),
   ),
 });
+
+export { ErrorSchema };
