@@ -1,6 +1,6 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { createTestApp } from "../test-helper.js";
+import { createTestApp, teardownTestApp } from "../test-helper.js";
 
 describe("Grow Phases API Feature Module", () => {
   let app: any;
@@ -13,7 +13,6 @@ describe("Grow Phases API Feature Module", () => {
     app = server;
     prismaClient = prisma;
 
-    // Build standard setup components to isolate the target stage elements cleanly
     const controller = await prismaClient.controller.create({
       data: {
         macAddress: "11:22:33:44:55:66",
@@ -28,6 +27,8 @@ describe("Grow Phases API Feature Module", () => {
                 name: "Temporary Test Phase",
                 order: 1,
                 durationDays: 14,
+                dayStartMinutes: 360,
+                dayDurationMinutes: 1080,
               },
             },
           },
@@ -45,18 +46,16 @@ describe("Grow Phases API Feature Module", () => {
   });
 
   after(async () => {
-    // Delete in FK-safe order: grow cycles first, then the controller.
     await prismaClient.growCycle.deleteMany({
       where: { controller: { macAddress: "11:22:33:44:55:66" } },
     });
     await prismaClient.controller.delete({
       where: { macAddress: "11:22:33:44:55:66" },
     });
-    await prismaClient.$disconnect();
-    await app.close();
+    await teardownTestApp(app);
   });
 
-  test("GET /grow-phases/cycle/:growCycleId - Should load chronological configurations by parent ID", async () => {
+  test("GET /grow-phases/cycle/:growCycleId - Should load chronological phases with day/night schedule and environments", async () => {
     const response = await app.inject({
       method: "GET",
       url: `/api/grow-phases/cycle/${testGrowCycleId}`,
@@ -67,6 +66,12 @@ describe("Grow Phases API Feature Module", () => {
     assert.equal(response.statusCode, 200);
     assert.ok(Array.isArray(body));
     assert.equal(body[0].id, targetedPhaseId);
+    assert.equal(body[0].dayStartMinutes, 360);
+    assert.equal(body[0].dayDurationMinutes, 1080);
+    assert.ok(
+      Array.isArray(body[0].environments),
+      "Environments array must be included in phase response",
+    );
   });
 
   test("PUT /grow-phases/:id - Should modify timing profiles cleanly", async () => {
@@ -88,7 +93,7 @@ describe("Grow Phases API Feature Module", () => {
     assert.equal(body.isActive, true);
   });
 
-  test("PUT /grow-phases/:id - Should accept a date-only endAt (YYYY-MM-DD) and return it without a timestamp", async () => {
+  test("PUT /grow-phases/:id - Should accept a date-only endAt and return it without a timestamp", async () => {
     const updateResponse = await app.inject({
       method: "PUT",
       url: `/api/grow-phases/${targetedPhaseId}`,
@@ -101,16 +106,8 @@ describe("Grow Phases API Feature Module", () => {
     const updated = JSON.parse(updateResponse.body);
 
     assert.equal(updateResponse.statusCode, 200);
-    assert.equal(
-      updated.startAt,
-      "2026-06-16",
-      "PUT response should expose startAt as a date-only YYYY-MM-DD string",
-    );
-    assert.equal(
-      updated.endAt,
-      "2026-07-30",
-      "PUT response should expose endAt as a date-only YYYY-MM-DD string",
-    );
+    assert.equal(updated.startAt, "2026-06-16");
+    assert.equal(updated.endAt, "2026-07-30");
 
     const getResponse = await app.inject({
       method: "GET",
@@ -120,38 +117,37 @@ describe("Grow Phases API Feature Module", () => {
     assert.equal(getResponse.statusCode, 200);
     assert.equal(fetched.startAt, "2026-06-16");
     assert.equal(fetched.endAt, "2026-07-30");
-
-    const listResponse = await app.inject({
-      method: "GET",
-      url: `/api/grow-phases/cycle/${testGrowCycleId}`,
-    });
-    const list = JSON.parse(listResponse.body);
-    const listed = list.find((p: { id: string }) => p.id === targetedPhaseId);
-    assert.equal(listed.startAt, "2026-06-16");
-    assert.equal(listed.endAt, "2026-07-30");
   });
 
-  test("PUT /grow-phases/:id - Should reject a full date-time string for startAt or endAt (timestamp is no longer accepted)", async () => {
+  test("PUT /grow-phases/:id - Should reject a full date-time string for startAt or endAt", async () => {
     const startAtResponse = await app.inject({
       method: "PUT",
       url: `/api/grow-phases/${targetedPhaseId}`,
       payload: { startAt: "2026-06-16T00:00:00.000Z" },
     });
-    assert.equal(
-      startAtResponse.statusCode,
-      400,
-      "Validation must reject date-time strings now that startAt is date-only",
-    );
+    assert.equal(startAtResponse.statusCode, 400);
 
     const endAtResponse = await app.inject({
       method: "PUT",
       url: `/api/grow-phases/${targetedPhaseId}`,
       payload: { endAt: "2026-07-30T00:00:00.000Z" },
     });
-    assert.equal(
-      endAtResponse.statusCode,
-      400,
-      "Validation must reject date-time strings now that endAt is date-only",
-    );
+    assert.equal(endAtResponse.statusCode, 400);
+  });
+
+  test("PUT /grow-phases/:id - Should accept a custom dayStartMinutes / dayDurationMinutes (12/12 photoperiod)", async () => {
+    const response = await app.inject({
+      method: "PUT",
+      url: `/api/grow-phases/${targetedPhaseId}`,
+      payload: {
+        dayStartMinutes: 360,
+        dayDurationMinutes: 720,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 200);
+    assert.equal(body.dayStartMinutes, 360);
+    assert.equal(body.dayDurationMinutes, 720);
   });
 });

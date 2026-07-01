@@ -38,19 +38,27 @@ export class ControllersController {
     });
   }
 
-  // 2. READ ONE (Deeply fetches active infrastructure networks for Vue dashboards)
+  // 2. READ ONE
+  //    - active grow cycles (with active phase and its DAY/NIGHT environments)
+  //    - persistent device inventory
+  //    - sensor inventory
   async getControllerById(id: string) {
     return await this.prisma.controller.findUniqueOrThrow({
       where: { id },
       include: {
         growCycles: {
-          where: { isActive: true }, // Instantly displays what's currently cultivation-active
+          where: { isActive: true },
           include: {
             phases: {
-              where: { isActive: true }, // Pulls the currently running step
+              where: { isActive: true },
+              include: {
+                environments: { orderBy: { period: "asc" } },
+              },
             },
-            devices: true, // Per-grow device inventory (devices are now scoped to grow cycles)
           },
+        },
+        devices: {
+          orderBy: { pinNumber: "asc" },
         },
         sensors: {
           orderBy: { createdAt: "asc" },
@@ -60,9 +68,9 @@ export class ControllersController {
   }
 
   // 3. CREATE / REGISTER
-  // Preserves the existing upsert-by-macAddress contract so a Pi re-registering
-  // its network profile doesn't crash the app. Sensor seeding only happens on a
-  // fresh create; re-registrations never silently mutate the sensor inventory.
+  //    Preserves the existing upsert-by-macAddress contract. Sensor seeding only
+  //    happens on a fresh create; re-registrations never silently mutate the
+  //    sensor inventory.
   async createController(body: CreateControllerInput) {
     const sensors = body.sensors ?? [];
 

@@ -1,24 +1,21 @@
 import { FastifyInstance } from "fastify";
 import { mqttClient } from "../../../mqtt/client.js";
+import {
+  DeviceType,
+  AutomationMode,
+} from "../../../generated/client/enums.js";
 
-type DeviceTypeLiteral =
-  | "LIGHT"
-  | "EXHAUST_FAN"
-  | "INTAKE_FAN"
-  | "CIRCULATION_FAN"
-  | "WATER_PUMP"
-  | "AIR_CONDITIONER"
-  | "HEATER"
-  | "HUMIDIFIER"
-  | "DEHUMIDIFIER"
-  | "CO2_INJECTOR";
+type DeviceTypeLiteral = (typeof DeviceType)[keyof typeof DeviceType];
+type AutomationModeLiteral =
+  (typeof AutomationMode)[keyof typeof AutomationMode];
 
 interface CreateDeviceInput {
-  growCycleId: string;
+  controllerId: string;
   name: string;
   type: DeviceTypeLiteral;
   pinNumber: number;
   mqttTopic: string;
+  automationMode?: AutomationModeLiteral;
   isActive?: boolean;
 }
 
@@ -27,6 +24,7 @@ interface UpdateDeviceInput {
   type?: DeviceTypeLiteral;
   pinNumber?: number;
   mqttTopic?: string;
+  automationMode?: AutomationModeLiteral;
   isActive?: boolean;
 }
 
@@ -35,11 +33,12 @@ interface BatchDeviceInput {
   type: DeviceTypeLiteral;
   pinNumber: number;
   mqttTopic: string;
+  automationMode?: AutomationModeLiteral;
   isActive?: boolean;
 }
 
 interface BatchCreateInput {
-  growCycleId: string;
+  controllerId: string;
   devices: BatchDeviceInput[];
 }
 
@@ -50,10 +49,10 @@ export class DevicesController {
     this.prisma = server.prisma;
   }
 
-  // 1. READ ALL (Fetch inventory assigned to a specific grow)
-  async getDevicesByGrowCycleId(growCycleId: string) {
+  // 1. READ ALL — persistent hardware inventory for a controller.
+  async getDevicesByControllerId(controllerId: string) {
     return await this.prisma.device.findMany({
-      where: { growCycleId },
+      where: { controllerId },
       orderBy: { pinNumber: "asc" },
     });
   }
@@ -63,8 +62,9 @@ export class DevicesController {
     return await this.prisma.device.findUniqueOrThrow({
       where: { id },
       include: {
-        growCycle: true,
-        deviceConfigs: true,
+        controller: {
+          select: { id: true, name: true, status: true },
+        },
       },
     });
   }
@@ -73,17 +73,18 @@ export class DevicesController {
   async createDevice(body: CreateDeviceInput) {
     return await this.prisma.device.create({
       data: {
-        growCycleId: body.growCycleId,
+        controllerId: body.controllerId,
         name: body.name,
         type: body.type,
         pinNumber: body.pinNumber,
         mqttTopic: body.mqttTopic,
+        automationMode: body.automationMode ?? "MANUAL",
         isActive: body.isActive ?? true,
       },
     });
   }
 
-  // 4. UPDATE
+  // 4. UPDATE — controllerId is immutable
   async updateDevice(id: string, body: UpdateDeviceInput) {
     return await this.prisma.device.update({
       where: { id },
@@ -104,11 +105,12 @@ export class DevicesController {
       body.devices.map((device) =>
         this.prisma.device.create({
           data: {
-            growCycleId: body.growCycleId,
+            controllerId: body.controllerId,
             name: device.name,
             type: device.type,
             pinNumber: device.pinNumber,
             mqttTopic: device.mqttTopic,
+            automationMode: device.automationMode ?? "MANUAL",
             isActive: device.isActive ?? true,
           },
         }),
@@ -116,19 +118,27 @@ export class DevicesController {
     );
   }
 
-  // 7. DEVICE COMMAND (toggle ON/OFF)
+  // 7. DEVICE COMMAND (immediate ON/OFF, source = MANUAL)
   async sendCommand(id: string, action: "ON" | "OFF") {
     const device = await this.prisma.device.findUniqueOrThrow({
       where: { id },
     });
 
-    // Persist the state change
-    await this.prisma.device.update({
-      where: { id },
-      data: { isActive: action === "ON" },
-    });
+    // Persist the state change and write an audit log row in a single transaction.
+    await this.prisma.$transaction([
+      this.prisma.device.update({
+        where: { id },
+        data: { isActive: action === "ON" },
+      }),
+      this.prisma.deviceStateLog.create({
+        data: {
+          deviceId: id,
+          action,
+          source: "MANUAL",
+        },
+      }),
+    ]);
 
-    // Publish command to the Pi over MQTT
     mqttClient.publish(
       `devices/${id}/commands`,
       JSON.stringify({

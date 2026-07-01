@@ -1,6 +1,6 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { createTestApp } from "../test-helper.js";
+import { createTestApp, teardownTestApp } from "../test-helper.js";
 
 describe("Sensors API Feature Module", () => {
   let app: any;
@@ -29,8 +29,7 @@ describe("Sensors API Feature Module", () => {
   after(async () => {
     await prismaClient.sensor.deleteMany({ where: { controllerId } });
     await prismaClient.controller.deleteMany({ where: { macAddress: mac } });
-    await prismaClient.$disconnect();
-    await app.close();
+    await teardownTestApp(app);
   });
 
   test("POST /api/sensors - Should register a new sensor on a controller", async () => {

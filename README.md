@@ -42,15 +42,17 @@ Requires a running PostgreSQL instance and MQTT broker. See `.env` for `DATABASE
 
 ```
 [Raspberry Pi Sensors] ──MQTT──> [Mosquitto] ──MQTT──> [PiGrow Server]
-                                                           │
-                                                     [Socket.IO]
-                                                           │
-                                                   [Frontend Dashboard]
+   [Raspberry Pi Relays] <──MQTT──       ──>        [Automation Engine]
+                                                            │
+                                                      [Socket.IO]
+                                                            │
+                                                    [Frontend Dashboard]
 ```
 
-- **`src/server.ts`** — entrypoint: Fastify → Socket.IO → MQTT → plugins → routes
+- **`src/server.ts`** — entrypoint: Fastify → Socket.IO → MQTT → plugins → routes → automation scheduler → listen
 - **`src/api/modules/<name>/`** — each domain has routes, controller, schema, and test
-- **`src/mqtt-handlers/`** — MQTT topic handlers for device telemetry
+- **`src/mqtt-handlers/`** — MQTT topic handlers for telemetry and device state feedback
+- **`src/automation/`** — `period.ts` (day/night resolver), `scheduler.ts` (60s light-schedule tick), `evaluator.ts` (threshold-driven reactions)
 - **`src/plugins/prisma.ts`** — Fastify plugin that decorates the server with Prisma client
 
 ## API
@@ -58,11 +60,15 @@ Requires a running PostgreSQL instance and MQTT broker. See `.env` for `DATABASE
 Full REST API reference in [`API.md`](./API.md). All routes under `/api`:
 
 - `/api/controllers` — Raspberry Pi controller management
-- `/api/devices` — GPIO device management
-- `/api/grow-cycles` — grow cycle scheduling (auto-generates 4 default phases)
-- `/api/grow-phases` — phase management with activation/deactivation
-- `/api/device-configs` — device configuration per phase
+- `/api/devices` — GPIO device management (devices owned by Controller)
+- `/api/sensors` — sensor inventory per Controller
+- `/api/grow-cycles` — grow cycle scheduling
+- `/api/grow-phases` — phase management with day/night clock schedule
+- `/api/grow-phases/:id/environment` — per-phase DAY/NIGHT environmental thresholds
+- `/api/automation-rules` — explicit per-device trigger rules (lights on day/night schedule, fans/heaters on thresholds, etc.)
 - `/api/telemetry` — sensor telemetry ingestion and queries
+
+Day/night cycles, per-phase thresholds, and rule-based device control (lights, fans, heater, humidifier, CO2 injector) are described in [`API.md`](./API.md).
 
 ## Docker
 

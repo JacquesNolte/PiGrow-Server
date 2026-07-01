@@ -1,6 +1,6 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { createTestApp } from "../test-helper.js";
+import { createTestApp, teardownTestApp } from "../test-helper.js";
 
 describe("Controllers API Feature Module", () => {
   let app: any;
@@ -17,8 +17,7 @@ describe("Controllers API Feature Module", () => {
     await prismaClient.controller.deleteMany({
       where: { macAddress: "b8:27:eb:bf:d3:42" },
     });
-    await prismaClient.$disconnect();
-    await app.close();
+    await teardownTestApp(app);
   });
 
   test("POST /controller - Should register a new Raspberry Pi hardware hub", async () => {

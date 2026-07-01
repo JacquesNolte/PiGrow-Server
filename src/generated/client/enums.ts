@@ -47,11 +47,38 @@ export const DeviceType = {
 export type DeviceType = (typeof DeviceType)[keyof typeof DeviceType]
 
 
-export const TriggerType = {
-  SCHEDULE: 'SCHEDULE',
+export const AutomationMode = {
+  MANUAL: 'MANUAL',
+  SCHEDULED: 'SCHEDULED',
   THRESHOLD: 'THRESHOLD',
   ALWAYS_ON: 'ALWAYS_ON',
   ALWAYS_OFF: 'ALWAYS_OFF'
 } as const
 
-export type TriggerType = (typeof TriggerType)[keyof typeof TriggerType]
+export type AutomationMode = (typeof AutomationMode)[keyof typeof AutomationMode]
+
+
+export const DayNightPeriod = {
+  DAY: 'DAY',
+  NIGHT: 'NIGHT'
+} as const
+
+export type DayNightPeriod = (typeof DayNightPeriod)[keyof typeof DayNightPeriod]
+
+
+export const RuleCondition = {
+  ABOVE_MAX: 'ABOVE_MAX',
+  BELOW_MIN: 'BELOW_MIN',
+  SCHEDULE_ON: 'SCHEDULE_ON',
+  SCHEDULE_OFF: 'SCHEDULE_OFF'
+} as const
+
+export type RuleCondition = (typeof RuleCondition)[keyof typeof RuleCondition]
+
+
+export const DeviceAction = {
+  ON: 'ON',
+  OFF: 'OFF'
+} as const
+
+export type DeviceAction = (typeof DeviceAction)[keyof typeof DeviceAction]

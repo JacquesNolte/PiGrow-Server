@@ -1,20 +1,36 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { handleTelemetry } from "./mqtt-handlers/telemetry-handler.js";
+import { handleDeviceState } from "./mqtt-handlers/device-state-handler.js";
 import mqttMatch from "mqtt-match";
 import { Server as SocketIOServer } from "socket.io";
 import prismaPlugin from "./plugins/prisma.js";
 import growCycleRoutes from "./api/modules/grow-cycles/grow-cycles.routes.js";
 import growPhaseRoutes from "./api/modules/grow-phases/grow-phases.routes.js";
+import phaseEnvironmentRoutes from "./api/modules/phase-environments/phase-environments.routes.js";
+import automationRuleRoutes from "./api/modules/automation-rules/automation-rules.routes.js";
 import controllerRoutes from "./api/modules/controllers/controllers.route.js";
 import deviceRoutes from "./api/modules/devices/devices.routes.js";
-import deviceConfigRoutes from "./api/modules/device-configs/device-configs.routes.js";
 import sensorRoutes from "./api/modules/sensors/sensors.routes.js";
 import telemetryRoutes from "./api/modules/telemetry/telemetry.routes.js";
 import { mqttClient, MQTT_BROKER_URL } from "./mqtt/client.js";
+import { prisma } from "./prisma.js";
+import { lightScheduler } from "./automation/scheduler.js";
 
 // 1. Initialize Fastify and register CORS for the Frontend
-const fastify = Fastify({ logger: true });
+const fastify = Fastify({
+  logger: true,
+  ajv: {
+    // Disable type coercion so JSON `null` for nullable numeric fields stays `null`
+    // (default coercion converts `null` -> 0 which corrupts the PhaseEnvironment
+    // payload semantics for our automation engine).
+    customOptions: {
+      coerceTypes: false,
+      removeAdditional: false,
+      useDefaults: true,
+    },
+  },
+});
 await fastify.register(cors, {
   origin: "*",
   methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -46,6 +62,23 @@ io.on("connection", (socket) => {
         timestamp: Date.now(),
       }),
     );
+
+    // Persist an audit log row. Fire-and-forget so a slow DB doesn't
+    // block the dashboard round-trip; errors are logged but do not
+    // affect the MQTT publish.
+    if (data?.deviceId && (data.action === "ON" || data.action === "OFF")) {
+      prisma.deviceStateLog
+        .create({
+          data: {
+            deviceId: data.deviceId,
+            action: data.action,
+            source: "UI",
+          },
+        })
+        .catch((err) => {
+          console.error("[ui_command] Failed to write DeviceStateLog:", err);
+        });
+    }
   });
 
   socket.on("disconnect", () => console.log(`💻 Frontend Client Disconnected`));
@@ -55,6 +88,7 @@ io.on("connection", (socket) => {
 const topicRegistry: Record<string, (topic: string, message: Buffer) => void> =
   {
     "sensors/+/telemetry": handleTelemetry,
+    "devices/+/state": handleDeviceState,
   };
 
 mqttClient.on("connect", () => {
@@ -74,13 +108,11 @@ mqttClient.on("connect", () => {
 
 // Central Message Pipeline Disambiguation
 mqttClient.on("message", (topic: string, message: Buffer) => {
-  // Try to find a pattern key in the registry that matches the incoming topic
   const matchingPattern = Object.keys(topicRegistry).find((pattern) =>
     mqttMatch(pattern, topic),
   );
 
   if (matchingPattern) {
-    // Dynamically execute the handler assigned to that pattern
     topicRegistry[matchingPattern](topic, message);
   } else {
     console.warn(`⚠️ Warning: Received data on unhandled topic: ${topic}`);
@@ -90,16 +122,21 @@ mqttClient.on("message", (topic: string, message: Buffer) => {
 await fastify.register(prismaPlugin);
 await fastify.register(growCycleRoutes);
 await fastify.register(growPhaseRoutes);
+await fastify.register(phaseEnvironmentRoutes);
+await fastify.register(automationRuleRoutes);
 await fastify.register(controllerRoutes);
 await fastify.register(deviceRoutes);
-await fastify.register(deviceConfigRoutes);
 await fastify.register(sensorRoutes);
 await fastify.register(telemetryRoutes);
 
-// 5. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)
+// 5. Start the automation scheduler (60s tick)
+lightScheduler.start();
+const stopScheduler = () => lightScheduler.stop();
+fastify.addHook("onClose", stopScheduler);
+
+// 6. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)
 const start = async () => {
   try {
-    // Listen on 0.0.0.0 so the server can accept traffic inside a Docker container
     await fastify.listen({ port: 4000, host: "0.0.0.0" });
     console.log("🚀 Unified Server engine listening on port 4000");
   } catch (err) {

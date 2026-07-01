@@ -67,10 +67,20 @@ export type GrowCycle = Prisma.GrowCycleModel
  */
 export type GrowPhase = Prisma.GrowPhaseModel
 /**
- * Model DeviceConfig
+ * Model PhaseEnvironment
  * 
  */
-export type DeviceConfig = Prisma.DeviceConfigModel
+export type PhaseEnvironment = Prisma.PhaseEnvironmentModel
+/**
+ * Model AutomationRule
+ * 
+ */
+export type AutomationRule = Prisma.AutomationRuleModel
+/**
+ * Model DeviceStateLog
+ * 
+ */
+export type DeviceStateLog = Prisma.DeviceStateLogModel
 /**
  * Model Telemetry
  * 

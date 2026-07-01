@@ -29,11 +29,15 @@ export type AggregateGrowPhase = {
 export type GrowPhaseAvgAggregateOutputType = {
   order: number | null
   durationDays: number | null
+  dayStartMinutes: number | null
+  dayDurationMinutes: number | null
 }
 
 export type GrowPhaseSumAggregateOutputType = {
   order: number | null
   durationDays: number | null
+  dayStartMinutes: number | null
+  dayDurationMinutes: number | null
 }
 
 export type GrowPhaseMinAggregateOutputType = {
@@ -45,6 +49,8 @@ export type GrowPhaseMinAggregateOutputType = {
   isActive: boolean | null
   startAt: Date | null
   endAt: Date | null
+  dayStartMinutes: number | null
+  dayDurationMinutes: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -58,6 +64,8 @@ export type GrowPhaseMaxAggregateOutputType = {
   isActive: boolean | null
   startAt: Date | null
   endAt: Date | null
+  dayStartMinutes: number | null
+  dayDurationMinutes: number | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -71,6 +79,8 @@ export type GrowPhaseCountAggregateOutputType = {
   isActive: number
   startAt: number
   endAt: number
+  dayStartMinutes: number
+  dayDurationMinutes: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -80,11 +90,15 @@ export type GrowPhaseCountAggregateOutputType = {
 export type GrowPhaseAvgAggregateInputType = {
   order?: true
   durationDays?: true
+  dayStartMinutes?: true
+  dayDurationMinutes?: true
 }
 
 export type GrowPhaseSumAggregateInputType = {
   order?: true
   durationDays?: true
+  dayStartMinutes?: true
+  dayDurationMinutes?: true
 }
 
 export type GrowPhaseMinAggregateInputType = {
@@ -96,6 +110,8 @@ export type GrowPhaseMinAggregateInputType = {
   isActive?: true
   startAt?: true
   endAt?: true
+  dayStartMinutes?: true
+  dayDurationMinutes?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -109,6 +125,8 @@ export type GrowPhaseMaxAggregateInputType = {
   isActive?: true
   startAt?: true
   endAt?: true
+  dayStartMinutes?: true
+  dayDurationMinutes?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -122,6 +140,8 @@ export type GrowPhaseCountAggregateInputType = {
   isActive?: true
   startAt?: true
   endAt?: true
+  dayStartMinutes?: true
+  dayDurationMinutes?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -222,6 +242,8 @@ export type GrowPhaseGroupByOutputType = {
   isActive: boolean
   startAt: Date | null
   endAt: Date | null
+  dayStartMinutes: number
+  dayDurationMinutes: number
   createdAt: Date
   updatedAt: Date
   _count: GrowPhaseCountAggregateOutputType | null
@@ -258,10 +280,13 @@ export type GrowPhaseWhereInput = {
   isActive?: Prisma.BoolFilter<"GrowPhase"> | boolean
   startAt?: Prisma.DateTimeNullableFilter<"GrowPhase"> | Date | string | null
   endAt?: Prisma.DateTimeNullableFilter<"GrowPhase"> | Date | string | null
+  dayStartMinutes?: Prisma.IntFilter<"GrowPhase"> | number
+  dayDurationMinutes?: Prisma.IntFilter<"GrowPhase"> | number
   createdAt?: Prisma.DateTimeFilter<"GrowPhase"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GrowPhase"> | Date | string
   growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
-  deviceConfigs?: Prisma.DeviceConfigListRelationFilter
+  environments?: Prisma.PhaseEnvironmentListRelationFilter
+  automationRules?: Prisma.AutomationRuleListRelationFilter
 }
 
 export type GrowPhaseOrderByWithRelationInput = {
@@ -273,10 +298,13 @@ export type GrowPhaseOrderByWithRelationInput = {
   isActive?: Prisma.SortOrder
   startAt?: Prisma.SortOrderInput | Prisma.SortOrder
   endAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  dayStartMinutes?: Prisma.SortOrder
+  dayDurationMinutes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   growCycle?: Prisma.GrowCycleOrderByWithRelationInput
-  deviceConfigs?: Prisma.DeviceConfigOrderByRelationAggregateInput
+  environments?: Prisma.PhaseEnvironmentOrderByRelationAggregateInput
+  automationRules?: Prisma.AutomationRuleOrderByRelationAggregateInput
 }
 
 export type GrowPhaseWhereUniqueInput = Prisma.AtLeast<{
@@ -291,10 +319,13 @@ export type GrowPhaseWhereUniqueInput = Prisma.AtLeast<{
   isActive?: Prisma.BoolFilter<"GrowPhase"> | boolean
   startAt?: Prisma.DateTimeNullableFilter<"GrowPhase"> | Date | string | null
   endAt?: Prisma.DateTimeNullableFilter<"GrowPhase"> | Date | string | null
+  dayStartMinutes?: Prisma.IntFilter<"GrowPhase"> | number
+  dayDurationMinutes?: Prisma.IntFilter<"GrowPhase"> | number
   createdAt?: Prisma.DateTimeFilter<"GrowPhase"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GrowPhase"> | Date | string
   growCycle?: Prisma.XOR<Prisma.GrowCycleScalarRelationFilter, Prisma.GrowCycleWhereInput>
-  deviceConfigs?: Prisma.DeviceConfigListRelationFilter
+  environments?: Prisma.PhaseEnvironmentListRelationFilter
+  automationRules?: Prisma.AutomationRuleListRelationFilter
 }, "id">
 
 export type GrowPhaseOrderByWithAggregationInput = {
@@ -306,6 +337,8 @@ export type GrowPhaseOrderByWithAggregationInput = {
   isActive?: Prisma.SortOrder
   startAt?: Prisma.SortOrderInput | Prisma.SortOrder
   endAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  dayStartMinutes?: Prisma.SortOrder
+  dayDurationMinutes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.GrowPhaseCountOrderByAggregateInput
@@ -327,6 +360,8 @@ export type GrowPhaseScalarWhereWithAggregatesInput = {
   isActive?: Prisma.BoolWithAggregatesFilter<"GrowPhase"> | boolean
   startAt?: Prisma.DateTimeNullableWithAggregatesFilter<"GrowPhase"> | Date | string | null
   endAt?: Prisma.DateTimeNullableWithAggregatesFilter<"GrowPhase"> | Date | string | null
+  dayStartMinutes?: Prisma.IntWithAggregatesFilter<"GrowPhase"> | number
+  dayDurationMinutes?: Prisma.IntWithAggregatesFilter<"GrowPhase"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"GrowPhase"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"GrowPhase"> | Date | string
 }
@@ -339,10 +374,13 @@ export type GrowPhaseCreateInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   growCycle: Prisma.GrowCycleCreateNestedOneWithoutPhasesInput
-  deviceConfigs?: Prisma.DeviceConfigCreateNestedManyWithoutGrowPhaseInput
+  environments?: Prisma.PhaseEnvironmentCreateNestedManyWithoutGrowPhaseInput
+  automationRules?: Prisma.AutomationRuleCreateNestedManyWithoutGrowPhaseInput
 }
 
 export type GrowPhaseUncheckedCreateInput = {
@@ -354,9 +392,12 @@ export type GrowPhaseUncheckedCreateInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
-  deviceConfigs?: Prisma.DeviceConfigUncheckedCreateNestedManyWithoutGrowPhaseInput
+  environments?: Prisma.PhaseEnvironmentUncheckedCreateNestedManyWithoutGrowPhaseInput
+  automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutGrowPhaseInput
 }
 
 export type GrowPhaseUpdateInput = {
@@ -367,10 +408,13 @@ export type GrowPhaseUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutPhasesNestedInput
-  deviceConfigs?: Prisma.DeviceConfigUpdateManyWithoutGrowPhaseNestedInput
+  environments?: Prisma.PhaseEnvironmentUpdateManyWithoutGrowPhaseNestedInput
+  automationRules?: Prisma.AutomationRuleUpdateManyWithoutGrowPhaseNestedInput
 }
 
 export type GrowPhaseUncheckedUpdateInput = {
@@ -382,9 +426,12 @@ export type GrowPhaseUncheckedUpdateInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deviceConfigs?: Prisma.DeviceConfigUncheckedUpdateManyWithoutGrowPhaseNestedInput
+  environments?: Prisma.PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseNestedInput
+  automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutGrowPhaseNestedInput
 }
 
 export type GrowPhaseCreateManyInput = {
@@ -396,6 +443,8 @@ export type GrowPhaseCreateManyInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -408,6 +457,8 @@ export type GrowPhaseUpdateManyMutationInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -421,6 +472,8 @@ export type GrowPhaseUncheckedUpdateManyInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -444,6 +497,8 @@ export type GrowPhaseCountOrderByAggregateInput = {
   isActive?: Prisma.SortOrder
   startAt?: Prisma.SortOrder
   endAt?: Prisma.SortOrder
+  dayStartMinutes?: Prisma.SortOrder
+  dayDurationMinutes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -451,6 +506,8 @@ export type GrowPhaseCountOrderByAggregateInput = {
 export type GrowPhaseAvgOrderByAggregateInput = {
   order?: Prisma.SortOrder
   durationDays?: Prisma.SortOrder
+  dayStartMinutes?: Prisma.SortOrder
+  dayDurationMinutes?: Prisma.SortOrder
 }
 
 export type GrowPhaseMaxOrderByAggregateInput = {
@@ -462,6 +519,8 @@ export type GrowPhaseMaxOrderByAggregateInput = {
   isActive?: Prisma.SortOrder
   startAt?: Prisma.SortOrder
   endAt?: Prisma.SortOrder
+  dayStartMinutes?: Prisma.SortOrder
+  dayDurationMinutes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -475,6 +534,8 @@ export type GrowPhaseMinOrderByAggregateInput = {
   isActive?: Prisma.SortOrder
   startAt?: Prisma.SortOrder
   endAt?: Prisma.SortOrder
+  dayStartMinutes?: Prisma.SortOrder
+  dayDurationMinutes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -482,11 +543,18 @@ export type GrowPhaseMinOrderByAggregateInput = {
 export type GrowPhaseSumOrderByAggregateInput = {
   order?: Prisma.SortOrder
   durationDays?: Prisma.SortOrder
+  dayStartMinutes?: Prisma.SortOrder
+  dayDurationMinutes?: Prisma.SortOrder
 }
 
 export type GrowPhaseScalarRelationFilter = {
   is?: Prisma.GrowPhaseWhereInput
   isNot?: Prisma.GrowPhaseWhereInput
+}
+
+export type GrowPhaseNullableScalarRelationFilter = {
+  is?: Prisma.GrowPhaseWhereInput | null
+  isNot?: Prisma.GrowPhaseWhereInput | null
 }
 
 export type GrowPhaseCreateNestedManyWithoutGrowCycleInput = {
@@ -531,18 +599,34 @@ export type GrowPhaseUncheckedUpdateManyWithoutGrowCycleNestedInput = {
   deleteMany?: Prisma.GrowPhaseScalarWhereInput | Prisma.GrowPhaseScalarWhereInput[]
 }
 
-export type GrowPhaseCreateNestedOneWithoutDeviceConfigsInput = {
-  create?: Prisma.XOR<Prisma.GrowPhaseCreateWithoutDeviceConfigsInput, Prisma.GrowPhaseUncheckedCreateWithoutDeviceConfigsInput>
-  connectOrCreate?: Prisma.GrowPhaseCreateOrConnectWithoutDeviceConfigsInput
+export type GrowPhaseCreateNestedOneWithoutEnvironmentsInput = {
+  create?: Prisma.XOR<Prisma.GrowPhaseCreateWithoutEnvironmentsInput, Prisma.GrowPhaseUncheckedCreateWithoutEnvironmentsInput>
+  connectOrCreate?: Prisma.GrowPhaseCreateOrConnectWithoutEnvironmentsInput
   connect?: Prisma.GrowPhaseWhereUniqueInput
 }
 
-export type GrowPhaseUpdateOneRequiredWithoutDeviceConfigsNestedInput = {
-  create?: Prisma.XOR<Prisma.GrowPhaseCreateWithoutDeviceConfigsInput, Prisma.GrowPhaseUncheckedCreateWithoutDeviceConfigsInput>
-  connectOrCreate?: Prisma.GrowPhaseCreateOrConnectWithoutDeviceConfigsInput
-  upsert?: Prisma.GrowPhaseUpsertWithoutDeviceConfigsInput
+export type GrowPhaseUpdateOneRequiredWithoutEnvironmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.GrowPhaseCreateWithoutEnvironmentsInput, Prisma.GrowPhaseUncheckedCreateWithoutEnvironmentsInput>
+  connectOrCreate?: Prisma.GrowPhaseCreateOrConnectWithoutEnvironmentsInput
+  upsert?: Prisma.GrowPhaseUpsertWithoutEnvironmentsInput
   connect?: Prisma.GrowPhaseWhereUniqueInput
-  update?: Prisma.XOR<Prisma.XOR<Prisma.GrowPhaseUpdateToOneWithWhereWithoutDeviceConfigsInput, Prisma.GrowPhaseUpdateWithoutDeviceConfigsInput>, Prisma.GrowPhaseUncheckedUpdateWithoutDeviceConfigsInput>
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GrowPhaseUpdateToOneWithWhereWithoutEnvironmentsInput, Prisma.GrowPhaseUpdateWithoutEnvironmentsInput>, Prisma.GrowPhaseUncheckedUpdateWithoutEnvironmentsInput>
+}
+
+export type GrowPhaseCreateNestedOneWithoutAutomationRulesInput = {
+  create?: Prisma.XOR<Prisma.GrowPhaseCreateWithoutAutomationRulesInput, Prisma.GrowPhaseUncheckedCreateWithoutAutomationRulesInput>
+  connectOrCreate?: Prisma.GrowPhaseCreateOrConnectWithoutAutomationRulesInput
+  connect?: Prisma.GrowPhaseWhereUniqueInput
+}
+
+export type GrowPhaseUpdateOneWithoutAutomationRulesNestedInput = {
+  create?: Prisma.XOR<Prisma.GrowPhaseCreateWithoutAutomationRulesInput, Prisma.GrowPhaseUncheckedCreateWithoutAutomationRulesInput>
+  connectOrCreate?: Prisma.GrowPhaseCreateOrConnectWithoutAutomationRulesInput
+  upsert?: Prisma.GrowPhaseUpsertWithoutAutomationRulesInput
+  disconnect?: Prisma.GrowPhaseWhereInput | boolean
+  delete?: Prisma.GrowPhaseWhereInput | boolean
+  connect?: Prisma.GrowPhaseWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.GrowPhaseUpdateToOneWithWhereWithoutAutomationRulesInput, Prisma.GrowPhaseUpdateWithoutAutomationRulesInput>, Prisma.GrowPhaseUncheckedUpdateWithoutAutomationRulesInput>
 }
 
 export type GrowPhaseCreateWithoutGrowCycleInput = {
@@ -553,9 +637,12 @@ export type GrowPhaseCreateWithoutGrowCycleInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
-  deviceConfigs?: Prisma.DeviceConfigCreateNestedManyWithoutGrowPhaseInput
+  environments?: Prisma.PhaseEnvironmentCreateNestedManyWithoutGrowPhaseInput
+  automationRules?: Prisma.AutomationRuleCreateNestedManyWithoutGrowPhaseInput
 }
 
 export type GrowPhaseUncheckedCreateWithoutGrowCycleInput = {
@@ -566,9 +653,12 @@ export type GrowPhaseUncheckedCreateWithoutGrowCycleInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
-  deviceConfigs?: Prisma.DeviceConfigUncheckedCreateNestedManyWithoutGrowPhaseInput
+  environments?: Prisma.PhaseEnvironmentUncheckedCreateNestedManyWithoutGrowPhaseInput
+  automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutGrowPhaseInput
 }
 
 export type GrowPhaseCreateOrConnectWithoutGrowCycleInput = {
@@ -609,11 +699,13 @@ export type GrowPhaseScalarWhereInput = {
   isActive?: Prisma.BoolFilter<"GrowPhase"> | boolean
   startAt?: Prisma.DateTimeNullableFilter<"GrowPhase"> | Date | string | null
   endAt?: Prisma.DateTimeNullableFilter<"GrowPhase"> | Date | string | null
+  dayStartMinutes?: Prisma.IntFilter<"GrowPhase"> | number
+  dayDurationMinutes?: Prisma.IntFilter<"GrowPhase"> | number
   createdAt?: Prisma.DateTimeFilter<"GrowPhase"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GrowPhase"> | Date | string
 }
 
-export type GrowPhaseCreateWithoutDeviceConfigsInput = {
+export type GrowPhaseCreateWithoutEnvironmentsInput = {
   id?: string
   name: string
   order: number
@@ -621,12 +713,15 @@ export type GrowPhaseCreateWithoutDeviceConfigsInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
   growCycle: Prisma.GrowCycleCreateNestedOneWithoutPhasesInput
+  automationRules?: Prisma.AutomationRuleCreateNestedManyWithoutGrowPhaseInput
 }
 
-export type GrowPhaseUncheckedCreateWithoutDeviceConfigsInput = {
+export type GrowPhaseUncheckedCreateWithoutEnvironmentsInput = {
   id?: string
   growCycleId: string
   name: string
@@ -635,27 +730,30 @@ export type GrowPhaseUncheckedCreateWithoutDeviceConfigsInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
+  automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutGrowPhaseInput
 }
 
-export type GrowPhaseCreateOrConnectWithoutDeviceConfigsInput = {
+export type GrowPhaseCreateOrConnectWithoutEnvironmentsInput = {
   where: Prisma.GrowPhaseWhereUniqueInput
-  create: Prisma.XOR<Prisma.GrowPhaseCreateWithoutDeviceConfigsInput, Prisma.GrowPhaseUncheckedCreateWithoutDeviceConfigsInput>
+  create: Prisma.XOR<Prisma.GrowPhaseCreateWithoutEnvironmentsInput, Prisma.GrowPhaseUncheckedCreateWithoutEnvironmentsInput>
 }
 
-export type GrowPhaseUpsertWithoutDeviceConfigsInput = {
-  update: Prisma.XOR<Prisma.GrowPhaseUpdateWithoutDeviceConfigsInput, Prisma.GrowPhaseUncheckedUpdateWithoutDeviceConfigsInput>
-  create: Prisma.XOR<Prisma.GrowPhaseCreateWithoutDeviceConfigsInput, Prisma.GrowPhaseUncheckedCreateWithoutDeviceConfigsInput>
+export type GrowPhaseUpsertWithoutEnvironmentsInput = {
+  update: Prisma.XOR<Prisma.GrowPhaseUpdateWithoutEnvironmentsInput, Prisma.GrowPhaseUncheckedUpdateWithoutEnvironmentsInput>
+  create: Prisma.XOR<Prisma.GrowPhaseCreateWithoutEnvironmentsInput, Prisma.GrowPhaseUncheckedCreateWithoutEnvironmentsInput>
   where?: Prisma.GrowPhaseWhereInput
 }
 
-export type GrowPhaseUpdateToOneWithWhereWithoutDeviceConfigsInput = {
+export type GrowPhaseUpdateToOneWithWhereWithoutEnvironmentsInput = {
   where?: Prisma.GrowPhaseWhereInput
-  data: Prisma.XOR<Prisma.GrowPhaseUpdateWithoutDeviceConfigsInput, Prisma.GrowPhaseUncheckedUpdateWithoutDeviceConfigsInput>
+  data: Prisma.XOR<Prisma.GrowPhaseUpdateWithoutEnvironmentsInput, Prisma.GrowPhaseUncheckedUpdateWithoutEnvironmentsInput>
 }
 
-export type GrowPhaseUpdateWithoutDeviceConfigsInput = {
+export type GrowPhaseUpdateWithoutEnvironmentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
   order?: Prisma.IntFieldUpdateOperationsInput | number
@@ -663,12 +761,15 @@ export type GrowPhaseUpdateWithoutDeviceConfigsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutPhasesNestedInput
+  automationRules?: Prisma.AutomationRuleUpdateManyWithoutGrowPhaseNestedInput
 }
 
-export type GrowPhaseUncheckedUpdateWithoutDeviceConfigsInput = {
+export type GrowPhaseUncheckedUpdateWithoutEnvironmentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
   name?: Prisma.StringFieldUpdateOperationsInput | string
@@ -677,8 +778,91 @@ export type GrowPhaseUncheckedUpdateWithoutDeviceConfigsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutGrowPhaseNestedInput
+}
+
+export type GrowPhaseCreateWithoutAutomationRulesInput = {
+  id?: string
+  name: string
+  order: number
+  durationDays: number
+  isActive?: boolean
+  startAt?: Date | string | null
+  endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  growCycle: Prisma.GrowCycleCreateNestedOneWithoutPhasesInput
+  environments?: Prisma.PhaseEnvironmentCreateNestedManyWithoutGrowPhaseInput
+}
+
+export type GrowPhaseUncheckedCreateWithoutAutomationRulesInput = {
+  id?: string
+  growCycleId: string
+  name: string
+  order: number
+  durationDays: number
+  isActive?: boolean
+  startAt?: Date | string | null
+  endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  environments?: Prisma.PhaseEnvironmentUncheckedCreateNestedManyWithoutGrowPhaseInput
+}
+
+export type GrowPhaseCreateOrConnectWithoutAutomationRulesInput = {
+  where: Prisma.GrowPhaseWhereUniqueInput
+  create: Prisma.XOR<Prisma.GrowPhaseCreateWithoutAutomationRulesInput, Prisma.GrowPhaseUncheckedCreateWithoutAutomationRulesInput>
+}
+
+export type GrowPhaseUpsertWithoutAutomationRulesInput = {
+  update: Prisma.XOR<Prisma.GrowPhaseUpdateWithoutAutomationRulesInput, Prisma.GrowPhaseUncheckedUpdateWithoutAutomationRulesInput>
+  create: Prisma.XOR<Prisma.GrowPhaseCreateWithoutAutomationRulesInput, Prisma.GrowPhaseUncheckedCreateWithoutAutomationRulesInput>
+  where?: Prisma.GrowPhaseWhereInput
+}
+
+export type GrowPhaseUpdateToOneWithWhereWithoutAutomationRulesInput = {
+  where?: Prisma.GrowPhaseWhereInput
+  data: Prisma.XOR<Prisma.GrowPhaseUpdateWithoutAutomationRulesInput, Prisma.GrowPhaseUncheckedUpdateWithoutAutomationRulesInput>
+}
+
+export type GrowPhaseUpdateWithoutAutomationRulesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  durationDays?: Prisma.IntFieldUpdateOperationsInput | number
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  growCycle?: Prisma.GrowCycleUpdateOneRequiredWithoutPhasesNestedInput
+  environments?: Prisma.PhaseEnvironmentUpdateManyWithoutGrowPhaseNestedInput
+}
+
+export type GrowPhaseUncheckedUpdateWithoutAutomationRulesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  growCycleId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  order?: Prisma.IntFieldUpdateOperationsInput | number
+  durationDays?: Prisma.IntFieldUpdateOperationsInput | number
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  environments?: Prisma.PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseNestedInput
 }
 
 export type GrowPhaseCreateManyGrowCycleInput = {
@@ -689,6 +873,8 @@ export type GrowPhaseCreateManyGrowCycleInput = {
   isActive?: boolean
   startAt?: Date | string | null
   endAt?: Date | string | null
+  dayStartMinutes?: number
+  dayDurationMinutes?: number
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -701,9 +887,12 @@ export type GrowPhaseUpdateWithoutGrowCycleInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deviceConfigs?: Prisma.DeviceConfigUpdateManyWithoutGrowPhaseNestedInput
+  environments?: Prisma.PhaseEnvironmentUpdateManyWithoutGrowPhaseNestedInput
+  automationRules?: Prisma.AutomationRuleUpdateManyWithoutGrowPhaseNestedInput
 }
 
 export type GrowPhaseUncheckedUpdateWithoutGrowCycleInput = {
@@ -714,9 +903,12 @@ export type GrowPhaseUncheckedUpdateWithoutGrowCycleInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  deviceConfigs?: Prisma.DeviceConfigUncheckedUpdateManyWithoutGrowPhaseNestedInput
+  environments?: Prisma.PhaseEnvironmentUncheckedUpdateManyWithoutGrowPhaseNestedInput
+  automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutGrowPhaseNestedInput
 }
 
 export type GrowPhaseUncheckedUpdateManyWithoutGrowCycleInput = {
@@ -727,6 +919,8 @@ export type GrowPhaseUncheckedUpdateManyWithoutGrowCycleInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   startAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   endAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  dayStartMinutes?: Prisma.IntFieldUpdateOperationsInput | number
+  dayDurationMinutes?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -737,11 +931,13 @@ export type GrowPhaseUncheckedUpdateManyWithoutGrowCycleInput = {
  */
 
 export type GrowPhaseCountOutputType = {
-  deviceConfigs: number
+  environments: number
+  automationRules: number
 }
 
 export type GrowPhaseCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  deviceConfigs?: boolean | GrowPhaseCountOutputTypeCountDeviceConfigsArgs
+  environments?: boolean | GrowPhaseCountOutputTypeCountEnvironmentsArgs
+  automationRules?: boolean | GrowPhaseCountOutputTypeCountAutomationRulesArgs
 }
 
 /**
@@ -757,8 +953,15 @@ export type GrowPhaseCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Ex
 /**
  * GrowPhaseCountOutputType without action
  */
-export type GrowPhaseCountOutputTypeCountDeviceConfigsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  where?: Prisma.DeviceConfigWhereInput
+export type GrowPhaseCountOutputTypeCountEnvironmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.PhaseEnvironmentWhereInput
+}
+
+/**
+ * GrowPhaseCountOutputType without action
+ */
+export type GrowPhaseCountOutputTypeCountAutomationRulesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AutomationRuleWhereInput
 }
 
 
@@ -771,10 +974,13 @@ export type GrowPhaseSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   isActive?: boolean
   startAt?: boolean
   endAt?: boolean
+  dayStartMinutes?: boolean
+  dayDurationMinutes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
-  deviceConfigs?: boolean | Prisma.GrowPhase$deviceConfigsArgs<ExtArgs>
+  environments?: boolean | Prisma.GrowPhase$environmentsArgs<ExtArgs>
+  automationRules?: boolean | Prisma.GrowPhase$automationRulesArgs<ExtArgs>
   _count?: boolean | Prisma.GrowPhaseCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["growPhase"]>
 
@@ -787,6 +993,8 @@ export type GrowPhaseSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   isActive?: boolean
   startAt?: boolean
   endAt?: boolean
+  dayStartMinutes?: boolean
+  dayDurationMinutes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
@@ -801,6 +1009,8 @@ export type GrowPhaseSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   isActive?: boolean
   startAt?: boolean
   endAt?: boolean
+  dayStartMinutes?: boolean
+  dayDurationMinutes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
@@ -815,14 +1025,17 @@ export type GrowPhaseSelectScalar = {
   isActive?: boolean
   startAt?: boolean
   endAt?: boolean
+  dayStartMinutes?: boolean
+  dayDurationMinutes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type GrowPhaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "growCycleId" | "name" | "order" | "durationDays" | "isActive" | "startAt" | "endAt" | "createdAt" | "updatedAt", ExtArgs["result"]["growPhase"]>
+export type GrowPhaseOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "growCycleId" | "name" | "order" | "durationDays" | "isActive" | "startAt" | "endAt" | "dayStartMinutes" | "dayDurationMinutes" | "createdAt" | "updatedAt", ExtArgs["result"]["growPhase"]>
 export type GrowPhaseInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   growCycle?: boolean | Prisma.GrowCycleDefaultArgs<ExtArgs>
-  deviceConfigs?: boolean | Prisma.GrowPhase$deviceConfigsArgs<ExtArgs>
+  environments?: boolean | Prisma.GrowPhase$environmentsArgs<ExtArgs>
+  automationRules?: boolean | Prisma.GrowPhase$automationRulesArgs<ExtArgs>
   _count?: boolean | Prisma.GrowPhaseCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type GrowPhaseIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -836,7 +1049,8 @@ export type $GrowPhasePayload<ExtArgs extends runtime.Types.Extensions.InternalA
   name: "GrowPhase"
   objects: {
     growCycle: Prisma.$GrowCyclePayload<ExtArgs>
-    deviceConfigs: Prisma.$DeviceConfigPayload<ExtArgs>[]
+    environments: Prisma.$PhaseEnvironmentPayload<ExtArgs>[]
+    automationRules: Prisma.$AutomationRulePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -847,6 +1061,8 @@ export type $GrowPhasePayload<ExtArgs extends runtime.Types.Extensions.InternalA
     isActive: boolean
     startAt: Date | null
     endAt: Date | null
+    dayStartMinutes: number
+    dayDurationMinutes: number
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["growPhase"]>
@@ -1244,7 +1460,8 @@ readonly fields: GrowPhaseFieldRefs;
 export interface Prisma__GrowPhaseClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   growCycle<T extends Prisma.GrowCycleDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GrowCycleDefaultArgs<ExtArgs>>): Prisma.Prisma__GrowCycleClient<runtime.Types.Result.GetResult<Prisma.$GrowCyclePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-  deviceConfigs<T extends Prisma.GrowPhase$deviceConfigsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GrowPhase$deviceConfigsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeviceConfigPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  environments<T extends Prisma.GrowPhase$environmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GrowPhase$environmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$PhaseEnvironmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  automationRules<T extends Prisma.GrowPhase$automationRulesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.GrowPhase$automationRulesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AutomationRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1282,6 +1499,8 @@ export interface GrowPhaseFieldRefs {
   readonly isActive: Prisma.FieldRef<"GrowPhase", 'Boolean'>
   readonly startAt: Prisma.FieldRef<"GrowPhase", 'DateTime'>
   readonly endAt: Prisma.FieldRef<"GrowPhase", 'DateTime'>
+  readonly dayStartMinutes: Prisma.FieldRef<"GrowPhase", 'Int'>
+  readonly dayDurationMinutes: Prisma.FieldRef<"GrowPhase", 'Int'>
   readonly createdAt: Prisma.FieldRef<"GrowPhase", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"GrowPhase", 'DateTime'>
 }
@@ -1685,27 +1904,51 @@ export type GrowPhaseDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Int
 }
 
 /**
- * GrowPhase.deviceConfigs
+ * GrowPhase.environments
  */
-export type GrowPhase$deviceConfigsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+export type GrowPhase$environmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   /**
-   * Select specific fields to fetch from the DeviceConfig
+   * Select specific fields to fetch from the PhaseEnvironment
    */
-  select?: Prisma.DeviceConfigSelect<ExtArgs> | null
+  select?: Prisma.PhaseEnvironmentSelect<ExtArgs> | null
   /**
-   * Omit specific fields from the DeviceConfig
+   * Omit specific fields from the PhaseEnvironment
    */
-  omit?: Prisma.DeviceConfigOmit<ExtArgs> | null
+  omit?: Prisma.PhaseEnvironmentOmit<ExtArgs> | null
   /**
    * Choose, which related nodes to fetch as well
    */
-  include?: Prisma.DeviceConfigInclude<ExtArgs> | null
-  where?: Prisma.DeviceConfigWhereInput
-  orderBy?: Prisma.DeviceConfigOrderByWithRelationInput | Prisma.DeviceConfigOrderByWithRelationInput[]
-  cursor?: Prisma.DeviceConfigWhereUniqueInput
+  include?: Prisma.PhaseEnvironmentInclude<ExtArgs> | null
+  where?: Prisma.PhaseEnvironmentWhereInput
+  orderBy?: Prisma.PhaseEnvironmentOrderByWithRelationInput | Prisma.PhaseEnvironmentOrderByWithRelationInput[]
+  cursor?: Prisma.PhaseEnvironmentWhereUniqueInput
   take?: number
   skip?: number
-  distinct?: Prisma.DeviceConfigScalarFieldEnum | Prisma.DeviceConfigScalarFieldEnum[]
+  distinct?: Prisma.PhaseEnvironmentScalarFieldEnum | Prisma.PhaseEnvironmentScalarFieldEnum[]
+}
+
+/**
+ * GrowPhase.automationRules
+ */
+export type GrowPhase$automationRulesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AutomationRule
+   */
+  select?: Prisma.AutomationRuleSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AutomationRule
+   */
+  omit?: Prisma.AutomationRuleOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AutomationRuleInclude<ExtArgs> | null
+  where?: Prisma.AutomationRuleWhereInput
+  orderBy?: Prisma.AutomationRuleOrderByWithRelationInput | Prisma.AutomationRuleOrderByWithRelationInput[]
+  cursor?: Prisma.AutomationRuleWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AutomationRuleScalarFieldEnum | Prisma.AutomationRuleScalarFieldEnum[]
 }
 
 /**

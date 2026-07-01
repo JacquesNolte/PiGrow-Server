@@ -1,6 +1,6 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { createTestApp } from "../test-helper.js";
+import { createTestApp, teardownTestApp } from "../test-helper.js";
 
 describe("Grow Cycles API Feature Module", () => {
   let app: any;
@@ -26,8 +26,7 @@ describe("Grow Cycles API Feature Module", () => {
     await prismaClient.controller.deleteMany({
       where: { macAddress: { startsWith: macPrefix } },
     });
-    await prismaClient.$disconnect();
-    await app.close();
+    await teardownTestApp(app);
   });
 
   // Helper: provision a fresh controller + grow cycle pair, each with its own
@@ -39,12 +38,6 @@ describe("Grow Cycles API Feature Module", () => {
     name: string;
     isActive?: boolean;
     startAt?: string;
-    devices?: Array<{
-      name: string;
-      type: "LIGHT" | "EXHAUST_FAN" | "INTAKE_FAN" | "CIRCULATION_FAN" | "WATER_PUMP" | "AIR_CONDITIONER" | "HEATER" | "HUMIDIFIER" | "DEHUMIDIFIER" | "CO2_INJECTOR";
-      pinNumber: number;
-      mqttTopic: string;
-    }>;
   }) {
     const mac = `aa:bb:cc:${macBase.slice(0, 2)}:${macBase.slice(2, 4)}:${(macCounter.n++).toString(16).padStart(2, "0")}`;
     const controller = await prismaClient.controller.create({
@@ -62,7 +55,6 @@ describe("Grow Cycles API Feature Module", () => {
         name: options.name,
         controllerId: controller.id,
         isActive: options.isActive ?? true,
-        devices: options.devices ?? [],
       },
     });
     const created = JSON.parse(createResponse.body);
@@ -79,37 +71,20 @@ describe("Grow Cycles API Feature Module", () => {
     return { controllerId: controller.id, growCycleId: created.id, body: created };
   }
 
-  test("POST /grow-cycles - Should initialize cycle and auto-generate 4 structural phases with hardware configurations embedded", async () => {
+  test("POST /grow-cycles - Should initialize a cycle without devices or phases", async () => {
     const { body } = await seedControllerAndCycle({
       name: "Blue Dream Automated Crop Run",
       isActive: true,
-      devices: [
-        { name: "LED Grow Panel", type: "LIGHT", pinNumber: 5, mqttTopic: "test/light" },
-        { name: "Exhaust Extractor Fan", type: "EXHAUST_FAN", pinNumber: 16, mqttTopic: "test/fan" },
-      ],
     });
 
     assert.equal(body.name, "Blue Dream Automated Crop Run");
     assert.equal(body.isActive, true);
 
-    // CRITICAL CORE INTEGRITY ASSERTIONS
     assert.ok(
       Array.isArray(body.phases),
-      "Response payload data should expose standard sub-phase array data",
+      "Response payload data should expose a sub-phase array",
     );
-    assert.equal(
-      body.phases.length,
-      4,
-      "Grow cycles must explicitly initialize with exactly 4 stages matching the structural blueprint rules",
-    );
-    assert.equal(body.phases[0].name, "Seedling / Clone");
-
-    // Validates that the nested write successfully wired the per-grow devices
-    // into operational constraints across every phase.
-    assert.ok(
-      body.phases[0].deviceConfigs.length > 0,
-      "Phase mappings must include pre-populated automated device rule configurations",
-    );
+    assert.equal(body.phases.length, 0, "Phases are not auto-generated");
   });
 
   test("PUT /grow-cycles/:id - Should accept a date-only startAt (YYYY-MM-DD) and return it without a timestamp", async () => {
@@ -125,13 +100,8 @@ describe("Grow Cycles API Feature Module", () => {
     });
     const updated = JSON.parse(updateResponse.body);
     assert.equal(updateResponse.statusCode, 200);
-    assert.equal(
-      updated.startAt,
-      "2026-06-16",
-      "PUT response should expose startAt as a date-only YYYY-MM-DD string",
-    );
+    assert.equal(updated.startAt, "2026-06-16");
 
-    // Confirm the same shape on subsequent reads (GET by id and via the list)
     const getResponse = await app.inject({
       method: "GET",
       url: `/api/grow-cycles/${growCycleId}`,
@@ -149,7 +119,7 @@ describe("Grow Cycles API Feature Module", () => {
     assert.equal(listed.startAt, "2026-06-16");
   });
 
-  test("PUT /grow-cycles/:id - Should reject a full date-time string (timestamp is no longer accepted)", async () => {
+  test("PUT /grow-cycles/:id - Should reject a full date-time string", async () => {
     const { growCycleId } = await seedControllerAndCycle({
       name: "Reject DateTime Run",
       isActive: false,
@@ -161,11 +131,7 @@ describe("Grow Cycles API Feature Module", () => {
       payload: { startAt: "2026-06-16T00:00:00.000Z" },
     });
 
-    assert.equal(
-      updateResponse.statusCode,
-      400,
-      "Validation must reject date-time strings now that startAt is date-only",
-    );
+    assert.equal(updateResponse.statusCode, 400);
   });
 
   test("POST /grow-cycles - Should reject 409 when the controller already has an active grow cycle", async () => {
@@ -181,7 +147,6 @@ describe("Grow Cycles API Feature Module", () => {
         name: "Second Active Cycle Attempt",
         controllerId,
         isActive: true,
-        devices: [],
       },
     });
 
@@ -203,7 +168,6 @@ describe("Grow Cycles API Feature Module", () => {
         name: "Secondary Inactive Cycle",
         controllerId,
         isActive: false,
-        devices: [],
       },
     });
 
@@ -219,9 +183,8 @@ describe("Grow Cycles API Feature Module", () => {
       startAt: "2026-01-01",
     });
 
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // today = 2026-01-16 lands in P2's range [2026-01-11, 2026-01-31)
     const skipResponse = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/skip-phase?today=2026-01-16`,
@@ -239,21 +202,21 @@ describe("Grow Cycles API Feature Module", () => {
     const p4 = phases[3];
 
     assert.equal(p2.durationDays, 5, "Active phase trimmed to elapsed days (16 - 11 = 5)");
-    assert.equal(p2.endAt, "2026-01-16", "Active phase endAt set to today");
-    assert.equal(p2.isActive, false, "Skipped phase deactivated");
+    assert.equal(p2.endAt, "2026-01-16");
+    assert.equal(p2.isActive, false);
 
-    assert.equal(p3.startAt, "2026-01-16", "Next phase startAt equals today (= previous endAt)");
-    assert.equal(p3.durationDays, 15, "Next phase duration unchanged");
-    assert.equal(p3.endAt, "2026-01-31", "Next phase endAt = today + its duration");
-    assert.equal(p3.isActive, true, "Next phase is now active");
+    assert.equal(p3.startAt, "2026-01-16");
+    assert.equal(p3.durationDays, 15);
+    assert.equal(p3.endAt, "2026-01-31");
+    assert.equal(p3.isActive, true);
 
-    assert.equal(p4.startAt, "2026-01-31", "Phase 4 startAt shifted earlier by 15 days");
-    assert.equal(p4.endAt, "2026-02-05", "Phase 4 endAt shifted earlier by 15 days");
-    assert.equal(p4.durationDays, 5, "Phase 4 duration unchanged");
+    assert.equal(p4.startAt, "2026-01-31");
+    assert.equal(p4.endAt, "2026-02-05");
+    assert.equal(p4.durationDays, 5);
 
-    assert.equal(p1.startAt, "2026-01-01", "Earlier phase startAt unchanged");
-    assert.equal(p1.endAt, "2026-01-11", "Earlier phase endAt unchanged");
-    assert.equal(p1.isActive, false, "Earlier phase remains inactive");
+    assert.equal(p1.startAt, "2026-01-01");
+    assert.equal(p1.endAt, "2026-01-11");
+    assert.equal(p1.isActive, false);
   });
 
   test("POST /grow-cycles/:id/skip-phase - Should reject when cycle has not started (startAt null)", async () => {
@@ -278,7 +241,7 @@ describe("Grow Cycles API Feature Module", () => {
       isActive: true,
       startAt: "2030-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
     const skipResponse = await app.inject({
       method: "POST",
@@ -296,9 +259,8 @@ describe("Grow Cycles API Feature Module", () => {
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // today = 2026-02-17 lands in P4's range [2026-02-15, 2026-02-20)
     const skipResponse = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/skip-phase?today=2026-02-17`,
@@ -315,9 +277,8 @@ describe("Grow Cycles API Feature Module", () => {
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // today = 2026-01-01 = P1 startAt, so P1 is active with elapsed = 0
     const skipResponse = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/skip-phase?today=2026-01-01`,
@@ -326,22 +287,20 @@ describe("Grow Cycles API Feature Module", () => {
     assert.equal(skipResponse.statusCode, 200);
 
     const phases = body.phases;
-    assert.equal(phases[0].durationDays, 0, "Skipped phase has 0 days when started today");
-    assert.equal(phases[0].endAt, "2026-01-01", "Skipped phase endAt is today");
-    assert.equal(phases[1].startAt, "2026-01-01", "Next phase startAt is today");
-    assert.equal(phases[1].isActive, true, "Next phase is now active");
+    assert.equal(phases[0].durationDays, 0);
+    assert.equal(phases[0].endAt, "2026-01-01");
+    assert.equal(phases[1].startAt, "2026-01-01");
+    assert.equal(phases[1].isActive, true);
   });
 
-  test("POST /grow-cycles/:id/skip-phase - Should accept the today query parameter and use it for computation", async () => {
+  test("POST /grow-cycles/:id/skip-phase - Should accept the today query parameter", async () => {
     const { growCycleId } = await seedControllerAndCycle({
       name: "Skip Today Override",
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // today = 2026-01-21 lands in P2's range [2026-01-11, 2026-01-31)
-    // elapsed = 21 - 11 = 10, leftover = 20 - 10 = 10
     const skipResponse = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/skip-phase?today=2026-01-21`,
@@ -350,17 +309,9 @@ describe("Grow Cycles API Feature Module", () => {
 
     const body = JSON.parse(skipResponse.body);
     const p2 = body.phases[1];
-    assert.equal(
-      p2.durationDays,
-      10,
-      "Elapsed days match the override (21 - 11 = 10)",
-    );
+    assert.equal(p2.durationDays, 10);
     assert.equal(p2.endAt, "2026-01-21");
-    assert.equal(
-      body.phases[3].endAt,
-      "2026-02-10",
-      "Last phase endAt shifted earlier by exactly the leftover (10 days)",
-    );
+    assert.equal(body.phases[3].endAt, "2026-02-10");
   });
 
   test("POST /grow-cycles/:id/skip-phase - Calling twice should advance the active phase by one each time", async () => {
@@ -369,30 +320,27 @@ describe("Grow Cycles API Feature Module", () => {
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // First skip: today = 2026-01-16 → skip P2, P3 becomes active
     const first = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/skip-phase?today=2026-01-16`,
     });
     assert.equal(first.statusCode, 200);
     const firstBody = JSON.parse(first.body);
-    assert.equal(firstBody.phases[2].isActive, true, "After first skip, phase 3 active");
+    assert.equal(firstBody.phases[2].isActive, true);
     assert.equal(firstBody.phases[1].endAt, "2026-01-16");
 
-    // Second skip: today = 2026-01-26 → P3 active (range [2026-01-16, 2026-01-31))
-    // elapsed = 26 - 16 = 10, leftover = 15 - 10 = 5
     const second = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/skip-phase?today=2026-01-26`,
     });
     assert.equal(second.statusCode, 200);
     const secondBody = JSON.parse(second.body);
-    assert.equal(secondBody.phases[3].isActive, true, "After second skip, phase 4 active");
+    assert.equal(secondBody.phases[3].isActive, true);
     assert.equal(secondBody.phases[2].endAt, "2026-01-26");
-    assert.equal(secondBody.phases[2].durationDays, 10, "Phase 3 trimmed to its elapsed days");
-    assert.equal(secondBody.phases[3].startAt, "2026-01-26", "Phase 4 startAt = today");
+    assert.equal(secondBody.phases[2].durationDays, 10);
+    assert.equal(secondBody.phases[3].startAt, "2026-01-26");
   });
 
   test("POST /grow-cycles/:id/skip-phase - Should return 404 when the cycle does not exist", async () => {
@@ -410,10 +358,8 @@ describe("Grow Cycles API Feature Module", () => {
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // today = 2026-02-17 lands in P4's range [2026-02-15, 2026-02-20)
-    // elapsed = 17 - 15 = 2, leftover = 5 - 2 = 3
     const endResponse = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/end-grow?today=2026-02-17`,
@@ -421,43 +367,19 @@ describe("Grow Cycles API Feature Module", () => {
     const body = JSON.parse(endResponse.body);
 
     assert.equal(endResponse.statusCode, 200);
-    assert.equal(body.isActive, false, "Cycle marked inactive");
+    assert.equal(body.isActive, false);
     assert.ok(Array.isArray(body.phases));
 
     const phases = body.phases;
     const lastPhase = phases[3];
 
-    assert.equal(
-      lastPhase.durationDays,
-      2,
-      "Last phase trimmed to elapsed days (17 - 15 = 2)",
-    );
-    assert.equal(
-      lastPhase.endAt,
-      "2026-02-17",
-      "Last phase endAt set to today",
-    );
-    assert.equal(lastPhase.isActive, false, "Last phase deactivated");
-    assert.equal(
-      phases[0].isActive,
-      false,
-      "Earlier phase 1 deactivated",
-    );
-    assert.equal(
-      phases[1].isActive,
-      false,
-      "Earlier phase 2 deactivated",
-    );
-    assert.equal(
-      phases[2].isActive,
-      false,
-      "Earlier phase 3 deactivated",
-    );
-    assert.equal(
-      phases[2].endAt,
-      "2026-02-15",
-      "Phase 3 endAt unchanged (only the active phase shifts)",
-    );
+    assert.equal(lastPhase.durationDays, 2);
+    assert.equal(lastPhase.endAt, "2026-02-17");
+    assert.equal(lastPhase.isActive, false);
+    assert.equal(phases[0].isActive, false);
+    assert.equal(phases[1].isActive, false);
+    assert.equal(phases[2].isActive, false);
+    assert.equal(phases[2].endAt, "2026-02-15");
   });
 
   test("POST /grow-cycles/:id/end-grow - Should reject when cycle has not started (startAt null)", async () => {
@@ -482,9 +404,8 @@ describe("Grow Cycles API Feature Module", () => {
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // today = 2026-03-01 is past the last phase's endAt (2026-02-20)
     const endResponse = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/end-grow?today=2026-03-01`,
@@ -495,16 +416,14 @@ describe("Grow Cycles API Feature Module", () => {
     assert.equal(body.error, "No active phase to end");
   });
 
-  test("POST /grow-cycles/:id/end-grow - Should accept the today query parameter and use it for computation", async () => {
+  test("POST /grow-cycles/:id/end-grow - Should accept the today query parameter", async () => {
     const { growCycleId } = await seedControllerAndCycle({
       name: "End Grow Today Override",
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
-    // today = 2026-02-18 lands in P4's range [2026-02-15, 2026-02-20)
-    // elapsed = 18 - 15 = 3, leftover = 5 - 3 = 2
     const endResponse = await app.inject({
       method: "POST",
       url: `/api/grow-cycles/${growCycleId}/end-grow?today=2026-02-18`,
@@ -513,11 +432,7 @@ describe("Grow Cycles API Feature Module", () => {
 
     const body = JSON.parse(endResponse.body);
     const lastPhase = body.phases[3];
-    assert.equal(
-      lastPhase.durationDays,
-      3,
-      "Elapsed days match the override (18 - 15 = 3)",
-    );
+    assert.equal(lastPhase.durationDays, 3);
     assert.equal(lastPhase.endAt, "2026-02-18");
     assert.equal(body.isActive, false);
   });
@@ -537,7 +452,7 @@ describe("Grow Cycles API Feature Module", () => {
       isActive: true,
       startAt: "2026-01-01",
     });
-    await overridePhaseDurations(growCycleId, [10, 20, 15, 5]);
+    await seedPhases(growCycleId, [10, 20, 15, 5]);
 
     const endResponse = await app.inject({
       method: "POST",
@@ -552,7 +467,6 @@ describe("Grow Cycles API Feature Module", () => {
         name: "Sequential Next Grow",
         controllerId,
         isActive: true,
-        devices: [],
       },
     });
     const restartBody = JSON.parse(restartResponse.body);
@@ -561,21 +475,22 @@ describe("Grow Cycles API Feature Module", () => {
     assert.equal(restartBody.controllerId, controllerId);
   });
 
-  // Helper: override the auto-generated 4 phase durations for a given cycle.
-  async function overridePhaseDurations(
+  async function seedPhases(
     growCycleId: string,
     durations: [number, number, number, number],
   ) {
-    const fetched = await prismaClient.growCycle.findUniqueOrThrow({
-      where: { id: growCycleId },
-      include: { phases: { orderBy: { order: "asc" } } },
-    });
-
-    for (let i = 0; i < durations.length; i++) {
-      await prismaClient.growPhase.update({
-        where: { id: fetched.phases[i].id },
-        data: { durationDays: durations[i] },
-      });
-    }
+    await prismaClient.$transaction(
+      durations.map((durationDays, i) =>
+        prismaClient.growPhase.create({
+          data: {
+            growCycleId,
+            name: `Phase ${i + 1}`,
+            order: i + 1,
+            durationDays,
+            isActive: i === 0,
+          },
+        }),
+      ),
+    );
   }
 });

@@ -14,26 +14,6 @@ export class ControllerBusyError extends Error {
   }
 }
 
-type DeviceTypeLiteral =
-  | "LIGHT"
-  | "EXHAUST_FAN"
-  | "INTAKE_FAN"
-  | "CIRCULATION_FAN"
-  | "WATER_PUMP"
-  | "AIR_CONDITIONER"
-  | "HEATER"
-  | "HUMIDIFIER"
-  | "DEHUMIDIFIER"
-  | "CO2_INJECTOR";
-
-interface GrowDeviceItem {
-  name: string;
-  type: DeviceTypeLiteral;
-  pinNumber: number;
-  mqttTopic: string;
-  isActive?: boolean;
-}
-
 export class GrowCyclesController {
   private prisma;
 
@@ -68,7 +48,10 @@ export class GrowCyclesController {
   }
 
   // Reject if the controller already has an active grow cycle.
-  private async assertControllerAvailable(controllerId: string, exceptGrowCycleId?: string) {
+  private async assertControllerAvailable(
+    controllerId: string,
+    exceptGrowCycleId?: string,
+  ) {
     const active = await this.prisma.growCycle.findFirst({
       where: {
         controllerId,
@@ -99,23 +82,17 @@ export class GrowCyclesController {
     return this.serializeStartAt(cycles);
   }
 
-  // 2. READ ONE (Deeply fetches related phases and active device rules)
+  // 2. READ ONE (Deeply fetches related phases with environments).
+  // Note: devices are NOT included — they are owned by the controller.
   async getGrowCycleById(id: string) {
     const cycle = await this.prisma.growCycle.findUniqueOrThrow({
       where: { id },
       include: {
         controller: true,
-        devices: true,
         phases: {
-          orderBy: {
-            order: "asc",
-          },
+          orderBy: { order: "asc" },
           include: {
-            deviceConfigs: {
-              include: {
-                device: true,
-              },
-            },
+            environments: { orderBy: { period: "asc" } },
           },
         },
       },
@@ -125,24 +102,19 @@ export class GrowCyclesController {
   }
 
   // 3. CREATE
-  // Atomically provisions: GrowCycle + per-grow Devices + 4 phases + per-phase DeviceConfigs.
-  // The devices array is provided in the body so the blueprint can reference the freshly
-  // created device IDs when building per-phase DeviceConfig rows.
+  // Devices are no longer seeded here — they belong to the controller.
+  // Phases are created separately via POST /api/grow-phases.
   async createGrowCycle(body: {
     name: string;
     controllerId: string;
     isActive?: boolean;
-    devices: GrowDeviceItem[];
   }) {
     const isActive = body.isActive ?? false;
 
-    // Enforce one-active-grow-per-controller at the application layer for a clean 409.
-    // The DB partial unique index is the structural backstop.
     if (isActive) {
       await this.assertControllerAvailable(body.controllerId);
     }
 
-    // 1. Persist the GrowCycle (no phases/devices yet) so we have a stable id.
     const createdCycle = await this.prisma.growCycle.create({
       data: {
         name: body.name,
@@ -150,165 +122,6 @@ export class GrowCyclesController {
         isActive,
       },
     });
-
-    // 2. Create the per-grow devices linked to the new cycle.
-    let createdDevices: Array<{ id: string; type: string }> = [];
-    if (body.devices.length > 0) {
-      const result = await this.prisma.$transaction(
-        body.devices.map((device) =>
-          this.prisma.device.create({
-            data: {
-              growCycleId: createdCycle.id,
-              name: device.name,
-              type: device.type,
-              pinNumber: device.pinNumber,
-              mqttTopic: device.mqttTopic,
-              isActive: device.isActive ?? true,
-            },
-            select: { id: true, type: true },
-          }),
-        ),
-      );
-      createdDevices = result;
-    }
-
-    // 3. Resolve devices by type for blueprint wiring.
-    const findDevice = (type: string) => createdDevices.find((d) => d.type === type);
-    const lightDevice = findDevice("LIGHT");
-    const exhaustFan = findDevice("EXHAUST_FAN");
-    const pumpDevice = findDevice("WATER_PUMP");
-
-    // 4. Build the 4-phase structural blueprint with per-phase DeviceConfigs.
-    const phaseBlueprints = [
-      {
-        name: "Seedling / Clone",
-        order: 1,
-        durationDays: 14,
-        isActive: true,
-        deviceConfigs: {
-          create: [
-            ...(lightDevice
-              ? [
-                  {
-                    deviceId: lightDevice.id,
-                    triggerType: "SCHEDULE" as const,
-                    configData: { onTime: "06:00", durationHours: 18 },
-                  },
-                ]
-              : []),
-            ...(exhaustFan
-              ? [
-                  {
-                    deviceId: exhaustFan.id,
-                    triggerType: "THRESHOLD" as const,
-                    configData: { metric: "TEMP", high: 25.0 },
-                  },
-                ]
-              : []),
-          ],
-        },
-      },
-      {
-        name: "Vegetative Stage",
-        order: 2,
-        durationDays: 30,
-        isActive: false,
-        deviceConfigs: {
-          create: [
-            ...(lightDevice
-              ? [
-                  {
-                    deviceId: lightDevice.id,
-                    triggerType: "SCHEDULE" as const,
-                    configData: { onTime: "06:00", durationHours: 22 },
-                  },
-                ]
-              : []),
-            ...(exhaustFan
-              ? [
-                  {
-                    deviceId: exhaustFan.id,
-                    triggerType: "THRESHOLD" as const,
-                    configData: { metric: "TEMP", high: 26.5 },
-                  },
-                ]
-              : []),
-          ],
-        },
-      },
-      {
-        name: "Flowering / Bloom",
-        order: 3,
-        durationDays: 60,
-        isActive: false,
-        deviceConfigs: {
-          create: [
-            ...(lightDevice
-              ? [
-                  {
-                    deviceId: lightDevice.id,
-                    triggerType: "SCHEDULE" as const,
-                    configData: { onTime: "06:00", durationHours: 12 },
-                  },
-                ]
-              : []),
-            ...(exhaustFan
-              ? [
-                  {
-                    deviceId: exhaustFan.id,
-                    triggerType: "THRESHOLD" as const,
-                    configData: { metric: "TEMP", high: 26.0 },
-                  },
-                ]
-              : []),
-          ],
-        },
-      },
-      {
-        name: "Curing / Harvest",
-        order: 4,
-        durationDays: 7,
-        isActive: false,
-        deviceConfigs: {
-          create: [
-            ...(lightDevice
-              ? [
-                  {
-                    deviceId: lightDevice.id,
-                    triggerType: "ALWAYS_OFF" as const,
-                    configData: {},
-                  },
-                ]
-              : []),
-            ...(pumpDevice
-              ? [
-                  {
-                    deviceId: pumpDevice.id,
-                    triggerType: "ALWAYS_OFF" as const,
-                    configData: {},
-                  },
-                ]
-              : []),
-          ],
-        },
-      },
-    ];
-
-    // 5. Create the 4 phases in order with their per-phase DeviceConfigs.
-    await this.prisma.$transaction(
-      phaseBlueprints.map((phase) =>
-        this.prisma.growPhase.create({
-          data: {
-            growCycleId: createdCycle.id,
-            name: phase.name,
-            order: phase.order,
-            durationDays: phase.durationDays,
-            isActive: phase.isActive,
-            deviceConfigs: phase.deviceConfigs,
-          },
-        }),
-      ),
-    );
 
     return this.getGrowCycleById(createdCycle.id);
   }
@@ -351,8 +164,6 @@ export class GrowCyclesController {
   }
 
   // 6. SKIP ACTIVE PHASE
-  // Trims the active phase's remaining days, cascades the date shift across
-  // all subsequent phases, and activates the next phase — atomically.
   async skipPhase(id: string, todayOverride?: string) {
     const cycle = await this.prisma.growCycle.findUniqueOrThrow({
       where: { id },
@@ -372,10 +183,8 @@ export class GrowCyclesController {
       throw new SkipPhaseError("Server could not determine today's date");
     }
 
-    // Canonicalize every phase's startAt/endAt from cycle.startAt + cumulative durations
     this.recalculatePhaseDates(cycle.phases, cycle.startAt);
 
-    // Find the active phase: today >= startAt && today < endAt (lex on YYYY-MM-DD)
     const activeIdx = cycle.phases.findIndex(
       (p) =>
         p.startAt &&
@@ -394,27 +203,21 @@ export class GrowCyclesController {
 
     const active = cycle.phases[activeIdx];
     const elapsed = this.daysBetween(active.startAt!, today);
-    active.durationDays = elapsed; // 0 allowed when phase started today
+    active.durationDays = elapsed;
 
-    // Re-cascade with the new duration so every phase gets shifted startAt/endAt
     this.recalculatePhaseDates(cycle.phases, cycle.startAt);
 
     const next = cycle.phases[activeIdx + 1];
 
     await this.prisma.$transaction([
-      // Clear isActive on all phases in the cycle
       this.prisma.growPhase.updateMany({
         where: { growCycleId: id },
         data: { isActive: false },
       }),
-      // Activate the next phase (the one immediately after the skipped one)
       this.prisma.growPhase.update({
         where: { id: next.id },
         data: { isActive: true },
       }),
-      // Persist every phase's canonicalized startAt/endAt + the active phase's
-      // new durationDays. Writing all phases makes this endpoint the single
-      // source of truth for phase date derivation.
       ...cycle.phases.map((p) =>
         this.prisma.growPhase.update({
           where: { id: p.id },
@@ -432,9 +235,6 @@ export class GrowCyclesController {
   }
 
   // 7. END GROW
-  // Trims the active phase's remaining days, canonicalizes all dates, marks
-  // the cycle inactive, and deactivates all phases — atomically. Works from
-  // any active phase; the FE chooses when to expose the option.
   async endGrow(id: string, todayOverride?: string) {
     const cycle = await this.prisma.growCycle.findUniqueOrThrow({
       where: { id },
@@ -470,24 +270,19 @@ export class GrowCyclesController {
 
     const active = cycle.phases[activeIdx];
     const elapsed = this.daysBetween(active.startAt!, today);
-    active.durationDays = elapsed; // 0 allowed when phase started today
+    active.durationDays = elapsed;
 
-    // Re-cascade with the new duration so every phase gets the canonical dates
     this.recalculatePhaseDates(cycle.phases, cycle.startAt);
 
     await this.prisma.$transaction([
-      // Deactivate every phase in the cycle
       this.prisma.growPhase.updateMany({
         where: { growCycleId: id },
         data: { isActive: false },
       }),
-      // Mark the grow cycle as inactive — this frees the controller for the next grow.
       this.prisma.growCycle.update({
         where: { id },
         data: { isActive: false },
       }),
-      // Persist every phase's canonicalized startAt/endAt + the active phase's
-      // new durationDays.
       ...cycle.phases.map((p) =>
         this.prisma.growPhase.update({
           where: { id: p.id },
@@ -505,7 +300,6 @@ export class GrowCyclesController {
   }
 
   // Recompute every phase's startAt/endAt from cycle.startAt + cumulative durations.
-  // Mutates the passed array in place (matches FE's recalculatePhaseDates).
   private recalculatePhaseDates(
     phases: { startAt: Date | null; endAt: Date | null; durationDays: number }[],
     growStart: Date,

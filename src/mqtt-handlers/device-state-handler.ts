@@ -1,0 +1,80 @@
+import { prisma } from "../prisma.js";
+
+/**
+ * Handles `devices/<deviceId>/state` MQTT messages published by the Pi.
+ *
+ * Payload: { action: "ON" | "OFF"; timestamp: number }
+ *
+ * Reconciles `Device.isActive` with the reported state and writes a
+ * `DeviceStateLog` row with `source: "AUTO" reason: "state confirmed"`.
+ * That row is the source of truth for the evaluator's hysteresis check
+ * on subsequent ticks: if a fan has already physically been turned on
+ * and the Pi reports the state, the evaluator will not issue a redundant
+ * ON command.
+ */
+export async function handleDeviceState(
+  topic: string,
+  messageBuffer: Buffer,
+): Promise<void> {
+  try {
+    const parts = topic.split("/");
+    const deviceId = parts[1];
+    if (!deviceId) {
+      console.warn(`[device-state] Ignoring malformed topic: ${topic}`);
+      return;
+    }
+
+    let payload: { action?: "ON" | "OFF"; timestamp?: number };
+    try {
+      payload = JSON.parse(messageBuffer.toString());
+    } catch {
+      console.warn(
+        `[device-state] Non-JSON payload on ${topic}; dropping.`,
+      );
+      return;
+    }
+
+    if (payload?.action !== "ON" && payload?.action !== "OFF") {
+      console.warn(
+        `[device-state] Unknown action "${payload?.action}" on ${topic}`,
+      );
+      return;
+    }
+
+    const device = await prisma.device.findUnique({
+      where: { id: deviceId },
+      select: { id: true, isActive: true },
+    });
+    if (!device) {
+      console.warn(`[device-state] Unknown device id: ${deviceId}`);
+      return;
+    }
+
+    const reportedIsActive = payload.action === "ON";
+    if (device.isActive === reportedIsActive) {
+      // No-op reconciliation: device already in the reported state.
+      return;
+    }
+
+    await prisma.$transaction([
+      prisma.device.update({
+        where: { id: deviceId },
+        data: { isActive: reportedIsActive },
+      }),
+      prisma.deviceStateLog.create({
+        data: {
+          deviceId,
+          action: payload.action,
+          source: "AUTO",
+          reason: "state confirmed",
+        },
+      }),
+    ]);
+
+    console.log(
+      `[device-state] device=${deviceId} reconciled to ${payload.action} (was ${device.isActive ? "ON" : "OFF"})`,
+    );
+  } catch (err) {
+    console.error("[device-state] Failed to process MQTT payload:", err);
+  }
+}

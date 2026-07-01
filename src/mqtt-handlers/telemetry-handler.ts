@@ -1,6 +1,7 @@
 import type { SensorData } from "../types.js";
 import { prisma } from "../prisma.js";
 import { io } from "../server.js";
+import { evaluateThresholds } from "../automation/evaluator.js";
 
 /**
  * Parses `sensors/<sensorId>/telemetry` payloads into telemetry rows.
@@ -11,6 +12,9 @@ import { io } from "../server.js";
  * active grow cycle. If no active grow cycle exists, the reading is dropped
  * and a warning is logged — telemetry rows require a non-null growCycleId
  * by schema.
+ *
+ * After persisting, every reading is fed to the threshold evaluator, which
+ * may fire automation rules against the active grow cycle's phase environment.
  */
 export async function handleTelemetry(
   topic: string,
@@ -83,6 +87,19 @@ export async function handleTelemetry(
         value: row.value,
         growCycleId: row.growCycleId,
         timestamp: row.createdAt,
+      });
+
+      // Threshold evaluation is fire-and-forget so a slow evaluator never
+      // blocks the persistence path. Errors are logged inside the evaluator.
+      void evaluateThresholds({
+        growCycleId: activeGrowCycle.id,
+        sensorType: row.sensorType,
+        value: row.value,
+      }).catch((err) => {
+        console.error(
+          "[telemetry] Threshold evaluator threw:",
+          err,
+        );
       });
     }
   } catch (err) {

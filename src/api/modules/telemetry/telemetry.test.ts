@@ -1,6 +1,6 @@
 import { test, describe, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { createTestApp } from "../test-helper.js";
+import { createTestApp, teardownTestApp } from "../test-helper.js";
 
 describe("Telemetry API Feature Module", () => {
   let app: any;
@@ -68,8 +68,7 @@ describe("Telemetry API Feature Module", () => {
     await prismaClient.controller.deleteMany({
       where: { macAddress: testControllerMac },
     });
-    await prismaClient.$disconnect();
-    await app.close();
+    await teardownTestApp(app);
   });
 
   test("POST /telemetry - Should ingest a new sensor reading", async () => {

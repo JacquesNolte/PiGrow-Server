@@ -389,7 +389,9 @@ export const ModelName = {
   Device: 'Device',
   GrowCycle: 'GrowCycle',
   GrowPhase: 'GrowPhase',
-  DeviceConfig: 'DeviceConfig',
+  PhaseEnvironment: 'PhaseEnvironment',
+  AutomationRule: 'AutomationRule',
+  DeviceStateLog: 'DeviceStateLog',
   Telemetry: 'Telemetry'
 } as const
 
@@ -406,7 +408,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "controller" | "sensor" | "device" | "growCycle" | "growPhase" | "deviceConfig" | "telemetry"
+    modelProps: "controller" | "sensor" | "device" | "growCycle" | "growPhase" | "phaseEnvironment" | "automationRule" | "deviceStateLog" | "telemetry"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -780,77 +782,225 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    DeviceConfig: {
-      payload: Prisma.$DeviceConfigPayload<ExtArgs>
-      fields: Prisma.DeviceConfigFieldRefs
+    PhaseEnvironment: {
+      payload: Prisma.$PhaseEnvironmentPayload<ExtArgs>
+      fields: Prisma.PhaseEnvironmentFieldRefs
       operations: {
         findUnique: {
-          args: Prisma.DeviceConfigFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload> | null
+          args: Prisma.PhaseEnvironmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload> | null
         }
         findUniqueOrThrow: {
-          args: Prisma.DeviceConfigFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
+          args: Prisma.PhaseEnvironmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>
         }
         findFirst: {
-          args: Prisma.DeviceConfigFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload> | null
+          args: Prisma.PhaseEnvironmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload> | null
         }
         findFirstOrThrow: {
-          args: Prisma.DeviceConfigFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
+          args: Prisma.PhaseEnvironmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>
         }
         findMany: {
-          args: Prisma.DeviceConfigFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>[]
+          args: Prisma.PhaseEnvironmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>[]
         }
         create: {
-          args: Prisma.DeviceConfigCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
+          args: Prisma.PhaseEnvironmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>
         }
         createMany: {
-          args: Prisma.DeviceConfigCreateManyArgs<ExtArgs>
+          args: Prisma.PhaseEnvironmentCreateManyArgs<ExtArgs>
           result: BatchPayload
         }
         createManyAndReturn: {
-          args: Prisma.DeviceConfigCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>[]
+          args: Prisma.PhaseEnvironmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>[]
         }
         delete: {
-          args: Prisma.DeviceConfigDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
+          args: Prisma.PhaseEnvironmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>
         }
         update: {
-          args: Prisma.DeviceConfigUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
+          args: Prisma.PhaseEnvironmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>
         }
         deleteMany: {
-          args: Prisma.DeviceConfigDeleteManyArgs<ExtArgs>
+          args: Prisma.PhaseEnvironmentDeleteManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateMany: {
-          args: Prisma.DeviceConfigUpdateManyArgs<ExtArgs>
+          args: Prisma.PhaseEnvironmentUpdateManyArgs<ExtArgs>
           result: BatchPayload
         }
         updateManyAndReturn: {
-          args: Prisma.DeviceConfigUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>[]
+          args: Prisma.PhaseEnvironmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>[]
         }
         upsert: {
-          args: Prisma.DeviceConfigUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceConfigPayload>
+          args: Prisma.PhaseEnvironmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$PhaseEnvironmentPayload>
         }
         aggregate: {
-          args: Prisma.DeviceConfigAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateDeviceConfig>
+          args: Prisma.PhaseEnvironmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregatePhaseEnvironment>
         }
         groupBy: {
-          args: Prisma.DeviceConfigGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.DeviceConfigGroupByOutputType>[]
+          args: Prisma.PhaseEnvironmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PhaseEnvironmentGroupByOutputType>[]
         }
         count: {
-          args: Prisma.DeviceConfigCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.DeviceConfigCountAggregateOutputType> | number
+          args: Prisma.PhaseEnvironmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.PhaseEnvironmentCountAggregateOutputType> | number
+        }
+      }
+    }
+    AutomationRule: {
+      payload: Prisma.$AutomationRulePayload<ExtArgs>
+      fields: Prisma.AutomationRuleFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AutomationRuleFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AutomationRuleFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>
+        }
+        findFirst: {
+          args: Prisma.AutomationRuleFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AutomationRuleFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>
+        }
+        findMany: {
+          args: Prisma.AutomationRuleFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>[]
+        }
+        create: {
+          args: Prisma.AutomationRuleCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>
+        }
+        createMany: {
+          args: Prisma.AutomationRuleCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AutomationRuleCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>[]
+        }
+        delete: {
+          args: Prisma.AutomationRuleDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>
+        }
+        update: {
+          args: Prisma.AutomationRuleUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>
+        }
+        deleteMany: {
+          args: Prisma.AutomationRuleDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AutomationRuleUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AutomationRuleUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>[]
+        }
+        upsert: {
+          args: Prisma.AutomationRuleUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AutomationRulePayload>
+        }
+        aggregate: {
+          args: Prisma.AutomationRuleAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAutomationRule>
+        }
+        groupBy: {
+          args: Prisma.AutomationRuleGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AutomationRuleGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AutomationRuleCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AutomationRuleCountAggregateOutputType> | number
+        }
+      }
+    }
+    DeviceStateLog: {
+      payload: Prisma.$DeviceStateLogPayload<ExtArgs>
+      fields: Prisma.DeviceStateLogFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DeviceStateLogFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DeviceStateLogFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>
+        }
+        findFirst: {
+          args: Prisma.DeviceStateLogFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DeviceStateLogFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>
+        }
+        findMany: {
+          args: Prisma.DeviceStateLogFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>[]
+        }
+        create: {
+          args: Prisma.DeviceStateLogCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>
+        }
+        createMany: {
+          args: Prisma.DeviceStateLogCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DeviceStateLogCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>[]
+        }
+        delete: {
+          args: Prisma.DeviceStateLogDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>
+        }
+        update: {
+          args: Prisma.DeviceStateLogUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>
+        }
+        deleteMany: {
+          args: Prisma.DeviceStateLogDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DeviceStateLogUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DeviceStateLogUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>[]
+        }
+        upsert: {
+          args: Prisma.DeviceStateLogUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceStateLogPayload>
+        }
+        aggregate: {
+          args: Prisma.DeviceStateLogAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDeviceStateLog>
+        }
+        groupBy: {
+          args: Prisma.DeviceStateLogGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceStateLogGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DeviceStateLogCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceStateLogCountAggregateOutputType> | number
         }
       }
     }
@@ -998,11 +1148,12 @@ export type SensorScalarFieldEnum = (typeof SensorScalarFieldEnum)[keyof typeof 
 
 export const DeviceScalarFieldEnum = {
   id: 'id',
-  growCycleId: 'growCycleId',
+  controllerId: 'controllerId',
   name: 'name',
   type: 'type',
   pinNumber: 'pinNumber',
   mqttTopic: 'mqttTopic',
+  automationMode: 'automationMode',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1033,6 +1184,8 @@ export const GrowPhaseScalarFieldEnum = {
   isActive: 'isActive',
   startAt: 'startAt',
   endAt: 'endAt',
+  dayStartMinutes: 'dayStartMinutes',
+  dayDurationMinutes: 'dayDurationMinutes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1040,17 +1193,55 @@ export const GrowPhaseScalarFieldEnum = {
 export type GrowPhaseScalarFieldEnum = (typeof GrowPhaseScalarFieldEnum)[keyof typeof GrowPhaseScalarFieldEnum]
 
 
-export const DeviceConfigScalarFieldEnum = {
+export const PhaseEnvironmentScalarFieldEnum = {
   id: 'id',
   growPhaseId: 'growPhaseId',
-  deviceId: 'deviceId',
-  triggerType: 'triggerType',
-  configData: 'configData',
+  period: 'period',
+  tempMin: 'tempMin',
+  tempMax: 'tempMax',
+  tempTarget: 'tempTarget',
+  humidityMin: 'humidityMin',
+  humidityMax: 'humidityMax',
+  humidityTarget: 'humidityTarget',
+  co2Min: 'co2Min',
+  co2Max: 'co2Max',
+  co2Target: 'co2Target',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type DeviceConfigScalarFieldEnum = (typeof DeviceConfigScalarFieldEnum)[keyof typeof DeviceConfigScalarFieldEnum]
+export type PhaseEnvironmentScalarFieldEnum = (typeof PhaseEnvironmentScalarFieldEnum)[keyof typeof PhaseEnvironmentScalarFieldEnum]
+
+
+export const AutomationRuleScalarFieldEnum = {
+  id: 'id',
+  growCycleId: 'growCycleId',
+  growPhaseId: 'growPhaseId',
+  deviceId: 'deviceId',
+  watchedSensorType: 'watchedSensorType',
+  period: 'period',
+  condition: 'condition',
+  action: 'action',
+  cooldownSeconds: 'cooldownSeconds',
+  enabled: 'enabled',
+  lastTriggeredAt: 'lastTriggeredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AutomationRuleScalarFieldEnum = (typeof AutomationRuleScalarFieldEnum)[keyof typeof AutomationRuleScalarFieldEnum]
+
+
+export const DeviceStateLogScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  action: 'action',
+  source: 'source',
+  reason: 'reason',
+  createdAt: 'createdAt'
+} as const
+
+export type DeviceStateLogScalarFieldEnum = (typeof DeviceStateLogScalarFieldEnum)[keyof typeof DeviceStateLogScalarFieldEnum]
 
 
 export const TelemetryScalarFieldEnum = {
@@ -1073,13 +1264,6 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
-export const JsonNullValueInput = {
-  JsonNull: JsonNull
-} as const
-
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
-
-
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -1094,15 +1278,6 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
-export const JsonNullValueFilter = {
-  DbNull: DbNull,
-  JsonNull: JsonNull,
-  AnyNull: AnyNull
-} as const
-
-export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 
 
 
@@ -1196,6 +1371,20 @@ export type ListEnumDeviceTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$P
 
 
 /**
+ * Reference to a field of type 'AutomationMode'
+ */
+export type EnumAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AutomationMode'>
+    
+
+
+/**
+ * Reference to a field of type 'AutomationMode[]'
+ */
+export type ListEnumAutomationModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AutomationMode[]'>
+    
+
+
+/**
  * Reference to a field of type 'Boolean'
  */
 export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
@@ -1203,30 +1392,16 @@ export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
- * Reference to a field of type 'TriggerType'
+ * Reference to a field of type 'DayNightPeriod'
  */
-export type EnumTriggerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TriggerType'>
+export type EnumDayNightPeriodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DayNightPeriod'>
     
 
 
 /**
- * Reference to a field of type 'TriggerType[]'
+ * Reference to a field of type 'DayNightPeriod[]'
  */
-export type ListEnumTriggerTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'TriggerType[]'>
-    
-
-
-/**
- * Reference to a field of type 'Json'
- */
-export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
-    
-
-
-/**
- * Reference to a field of type 'QueryMode'
- */
-export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+export type ListEnumDayNightPeriodFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DayNightPeriod[]'>
     
 
 
@@ -1241,6 +1416,34 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'RuleCondition'
+ */
+export type EnumRuleConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RuleCondition'>
+    
+
+
+/**
+ * Reference to a field of type 'RuleCondition[]'
+ */
+export type ListEnumRuleConditionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'RuleCondition[]'>
+    
+
+
+/**
+ * Reference to a field of type 'DeviceAction'
+ */
+export type EnumDeviceActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceAction'>
+    
+
+
+/**
+ * Reference to a field of type 'DeviceAction[]'
+ */
+export type ListEnumDeviceActionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DeviceAction[]'>
     
 
 /**
@@ -1358,7 +1561,9 @@ export type GlobalOmitConfig = {
   device?: Prisma.DeviceOmit
   growCycle?: Prisma.GrowCycleOmit
   growPhase?: Prisma.GrowPhaseOmit
-  deviceConfig?: Prisma.DeviceConfigOmit
+  phaseEnvironment?: Prisma.PhaseEnvironmentOmit
+  automationRule?: Prisma.AutomationRuleOmit
+  deviceStateLog?: Prisma.DeviceStateLogOmit
   telemetry?: Prisma.TelemetryOmit
 }
 

@@ -56,7 +56,9 @@ export const ModelName = {
   Device: 'Device',
   GrowCycle: 'GrowCycle',
   GrowPhase: 'GrowPhase',
-  DeviceConfig: 'DeviceConfig',
+  PhaseEnvironment: 'PhaseEnvironment',
+  AutomationRule: 'AutomationRule',
+  DeviceStateLog: 'DeviceStateLog',
   Telemetry: 'Telemetry'
 } as const
 
@@ -107,11 +109,12 @@ export type SensorScalarFieldEnum = (typeof SensorScalarFieldEnum)[keyof typeof 
 
 export const DeviceScalarFieldEnum = {
   id: 'id',
-  growCycleId: 'growCycleId',
+  controllerId: 'controllerId',
   name: 'name',
   type: 'type',
   pinNumber: 'pinNumber',
   mqttTopic: 'mqttTopic',
+  automationMode: 'automationMode',
   isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -142,6 +145,8 @@ export const GrowPhaseScalarFieldEnum = {
   isActive: 'isActive',
   startAt: 'startAt',
   endAt: 'endAt',
+  dayStartMinutes: 'dayStartMinutes',
+  dayDurationMinutes: 'dayDurationMinutes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -149,17 +154,55 @@ export const GrowPhaseScalarFieldEnum = {
 export type GrowPhaseScalarFieldEnum = (typeof GrowPhaseScalarFieldEnum)[keyof typeof GrowPhaseScalarFieldEnum]
 
 
-export const DeviceConfigScalarFieldEnum = {
+export const PhaseEnvironmentScalarFieldEnum = {
   id: 'id',
   growPhaseId: 'growPhaseId',
-  deviceId: 'deviceId',
-  triggerType: 'triggerType',
-  configData: 'configData',
+  period: 'period',
+  tempMin: 'tempMin',
+  tempMax: 'tempMax',
+  tempTarget: 'tempTarget',
+  humidityMin: 'humidityMin',
+  humidityMax: 'humidityMax',
+  humidityTarget: 'humidityTarget',
+  co2Min: 'co2Min',
+  co2Max: 'co2Max',
+  co2Target: 'co2Target',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
 
-export type DeviceConfigScalarFieldEnum = (typeof DeviceConfigScalarFieldEnum)[keyof typeof DeviceConfigScalarFieldEnum]
+export type PhaseEnvironmentScalarFieldEnum = (typeof PhaseEnvironmentScalarFieldEnum)[keyof typeof PhaseEnvironmentScalarFieldEnum]
+
+
+export const AutomationRuleScalarFieldEnum = {
+  id: 'id',
+  growCycleId: 'growCycleId',
+  growPhaseId: 'growPhaseId',
+  deviceId: 'deviceId',
+  watchedSensorType: 'watchedSensorType',
+  period: 'period',
+  condition: 'condition',
+  action: 'action',
+  cooldownSeconds: 'cooldownSeconds',
+  enabled: 'enabled',
+  lastTriggeredAt: 'lastTriggeredAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AutomationRuleScalarFieldEnum = (typeof AutomationRuleScalarFieldEnum)[keyof typeof AutomationRuleScalarFieldEnum]
+
+
+export const DeviceStateLogScalarFieldEnum = {
+  id: 'id',
+  deviceId: 'deviceId',
+  action: 'action',
+  source: 'source',
+  reason: 'reason',
+  createdAt: 'createdAt'
+} as const
+
+export type DeviceStateLogScalarFieldEnum = (typeof DeviceStateLogScalarFieldEnum)[keyof typeof DeviceStateLogScalarFieldEnum]
 
 
 export const TelemetryScalarFieldEnum = {
@@ -182,13 +225,6 @@ export const SortOrder = {
 export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
-export const JsonNullValueInput = {
-  JsonNull: JsonNull
-} as const
-
-export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
-
-
 export const QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -203,13 +239,4 @@ export const NullsOrder = {
 } as const
 
 export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
-
-
-export const JsonNullValueFilter = {
-  DbNull: DbNull,
-  JsonNull: JsonNull,
-  AnyNull: AnyNull
-} as const
-
-export type JsonNullValueFilter = (typeof JsonNullValueFilter)[keyof typeof JsonNullValueFilter]
 

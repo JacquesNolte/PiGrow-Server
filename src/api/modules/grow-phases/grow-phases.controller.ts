@@ -8,6 +8,8 @@ interface CreatePhaseInput {
   isActive?: boolean;
   startAt?: string;
   endAt?: string;
+  dayStartMinutes?: number;
+  dayDurationMinutes?: number;
 }
 
 interface UpdatePhaseInput {
@@ -17,6 +19,8 @@ interface UpdatePhaseInput {
   isActive?: boolean;
   startAt?: string;
   endAt?: string;
+  dayStartMinutes?: number;
+  dayDurationMinutes?: number;
 }
 
 export class GrowPhasesController {
@@ -45,34 +49,24 @@ export class GrowPhasesController {
     } as T;
   }
 
-  // 1. READ ALL PHASES FOR A SPECIFIC CYCLE
+  // 1. READ ALL PHASES FOR A SPECIFIC CYCLE (with environments)
   async getPhasesByCycleId(growCycleId: string) {
     const phases = await this.prisma.growPhase.findMany({
       where: { growCycleId },
-      orderBy: {
-        order: "asc", // Ensures phases return in sequential order
-      },
+      orderBy: { order: "asc" },
       include: {
-        deviceConfigs: {
-          include: {
-            device: true,
-          },
-        },
+        environments: { orderBy: { period: "asc" } },
       },
     });
     return this.serializePhaseDates(phases);
   }
 
-  // 2. READ ONE INDIVIDUAL PHASE
+  // 2. READ ONE INDIVIDUAL PHASE (with environments)
   async getGrowPhaseById(id: string) {
     const phase = await this.prisma.growPhase.findUniqueOrThrow({
       where: { id },
       include: {
-        deviceConfigs: {
-          include: {
-            device: true,
-          },
-        },
+        environments: { orderBy: { period: "asc" } },
       },
     });
     return this.serializePhaseDates(phase);
@@ -80,7 +74,14 @@ export class GrowPhasesController {
 
   // 3. CREATE A CUSTOM PHASE
   async createGrowPhase(body: CreatePhaseInput) {
-    const { startAt, endAt, isActive, ...rest } = body;
+    const {
+      startAt,
+      endAt,
+      isActive,
+      dayStartMinutes,
+      dayDurationMinutes,
+      ...rest
+    } = body;
 
     const created = await this.prisma.growPhase.create({
       data: {
@@ -88,6 +89,8 @@ export class GrowPhasesController {
         isActive: isActive ?? false,
         startAt: startAt ? new Date(startAt) : null,
         endAt: endAt ? new Date(endAt) : null,
+        dayStartMinutes: dayStartMinutes ?? 360,
+        dayDurationMinutes: dayDurationMinutes ?? 1080,
       },
     });
     return this.serializePhaseDates(created);
@@ -134,13 +137,7 @@ export class GrowPhasesController {
 
     const result = await this.prisma.growPhase.findUnique({
       where: { id },
-      include: {
-        deviceConfigs: {
-          include: {
-            device: true,
-          },
-        },
-      },
+      include: { environments: { orderBy: { period: "asc" } } },
     });
     return result ? this.serializePhaseDates(result) : result;
   }

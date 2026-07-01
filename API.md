@@ -6,6 +6,25 @@ All IDs are UUIDv4 strings. Request bodies are JSON. All timestamps are ISO 8601
 
 ---
 
+## Automation overview
+
+PiGrow's automation engine drives a controller's physical relays from three pieces of configuration:
+
+1. **Devices** are persistent hardware (light, fan, heater, humidifier, etc.) attached to a `Controller`. They survive grow cycles; the same physical light stays wired to the same Pi across every grow.
+2. **Grow Phases** carry a day/night clock schedule (`dayStartMinutes`, `dayDurationMinutes`) and a per-phase `PhaseEnvironment` row per period (`DAY` / `NIGHT`) holding environmental thresholds (temp, humidity, CO2).
+3. **Automation Rules** link a device to a watch condition. Rules can be scoped to a phase (preferred) or a cycle, and fire when a rule's condition is met against the active phase's environment or the current clock period.
+
+The engine itself is split into two paths:
+
+- **Light scheduler** (`SCHEDULE_ON` / `SCHEDULE_OFF` rules): 60-second tick that compares the current day/night period against a device's latest confirmed state.
+- **Threshold evaluator** (`ABOVE_MAX` / `BELOW_MIN` rules): runs on every persisted telemetry row; for the active phase + current period, reads `PhaseEnvironment.*Max` / `*Min` for the watched sensor type and fires the rule's action if the latest reading crosses the boundary.
+
+Both paths consult the latest `DeviceStateLog` row for a device to enforce hysteresis — they never issue a command that matches the device's already-confirmed state. Closed-loop feedback is delivered by the Pi publishing `devices/<id>/state`; that handler reconciles `Device.isActive` and writes a `DeviceStateLog source:"AUTO"` row that becomes the source of truth for the next evaluation.
+
+Historical grow cycles (`isActive = false`) keep all telemetry, device-state logs, and rules — they are not removed by ending a grow. No rules fire for a non-active cycle, so historical data is read-only and stable.
+
+---
+
 ## Controllers (Raspberry Pi Hubs)
 
 ### `GET /api/controllers`
@@ -25,15 +44,16 @@ List all registered controllers.
 ```
 
 ### `GET /api/controllers/:id`
-Get a controller with its active grow cycles, devices, and **sensor inventory**.
+Get a controller with its active grow cycle (with the active phase and its environment), persistent device inventory, and sensor inventory.
 
 **Response `200`** — Controller plus:
 ```ts
 {
   // ...all Controller fields above...
-  devices: Device[];               // Full Device objects (see Device section)
+  devices: Device[];               // Persistent hardware attached to this Pi (see Device section)
   growCycles: GrowCycle[];         // Only cycles where isActive === true
-  // Each growCycle includes: phases (only phases where isActive === true)
+  // Each growCycle includes: phases (only phases where isActive === true),
+  //                          and each phase includes: environments (DAY + NIGHT rows)
   sensors: Sensor[];               // Physical sensors wired to this Pi (see Sensors section)
 }
 ```
@@ -81,85 +101,142 @@ Remove a controller.
 **Response `204`** — No body.
 **`404`** — `{ error: "Profile unlinking rejected" }`
 
+### `PATCH /api/controllers/:id/heartbeat`
+Update status reported by the Pi (ONLINE / OFFLINE).
+
+**Request body:**
+```ts
+{ status: "ONLINE" | "OFFLINE"; }
+```
+**Response `200`** — Updated Controller object.
+**`404`** — `{ error: "Controller not found for heartbeat update" }`
+
 ---
 
 ## Devices (GPIO Hardware)
 
-### `GET /api/devices/controller/:controllerId`
-List all devices assigned to a specific controller.
+A `Device` is a physical relay/actuator wired to a `Controller` (a light, fan, heater, humidifier, etc.). Devices are owned by the **Controller** and survive grow cycles — the same physical light stays wired to the same Pi across sequential grows. Grow cycles reference devices via `AutomationRule.deviceId`, not via a direct FK.
 
-**Response `200`** — Array of:
+### Model
+
 ```ts
 {
   id: string;
-  controllerId: string;
-  name: string;                    // e.g. "SpiderFarmer SF2000"
-  type: DeviceType;
-  pinNumber: number;               // 0-40 (GPIO pin)
-  mqttTopic: string;               // e.g. "tent1/device/light/cmd"
-  isActive: boolean;
+  controllerId: string;     // UUID of the parent Controller
+  name: string;             // e.g. "SpiderFarmer SF2000", "AC Infinity T6"
+  type: DeviceType;         // see below
+  pinNumber: number;        // 0-40 (GPIO pin / relay channel)
+  mqttTopic: string;        // max 150 chars
+  automationMode: AutomationMode; // see below (default MANUAL)
+  isActive: boolean;        // Server-tracked current relay state (last command issued / confirmed)
   createdAt: string;
   updatedAt: string;
 }
 ```
-Where `DeviceType` is one of:
+
+`DeviceType` is one of:
 `"LIGHT" | "EXHAUST_FAN" | "INTAKE_FAN" | "CIRCULATION_FAN" | "WATER_PUMP" | "AIR_CONDITIONER" | "HEATER" | "HUMIDIFIER" | "DEHUMIDIFIER" | "CO2_INJECTOR"`
 
+`AutomationMode` is one of:
+| Value | Meaning |
+|---|---|
+| `"MANUAL"` | No automation; only REST / Socket.IO commands. |
+| `"SCHEDULED"` | Driven by the day/night clock (typical for `LIGHT`). |
+| `"THRESHOLD"` | Evaluated against the active phase's `PhaseEnvironment` (typical for `HEATER`, fans, humidifier, CO2). |
+| `"ALWAYS_ON"` | Pinned ON for the duration of the active grow. |
+| `"ALWAYS_OFF"` | Pinned OFF (override). |
+
+### `GET /api/devices/controller/:controllerId`
+List all devices attached to a specific controller, ordered by `pinNumber` ascending.
+
+**Response `200`** — Array of `Device`.
 **`400`** — `{ error: "Failed to load hardware profiles" }`
 
-### `GET /api/device/:id`
-Get a single device with its controller and device configs.
+### `GET /api/devices/:id`
+Get a single device.
 
-**Response `200`** — Device plus:
-```ts
-{
-  // ...all Device fields above...
-  controller: Controller;          // Full Controller object
-  deviceConfigs: DeviceConfig[];   // All DeviceConfig objects for this device
-}
-```
+**Response `200`** — `Device` object.
 **`404`** — `{ error: "Physical hardware device not found" }`
 
-### `POST /api/device`
-Provision a new device.
+### `POST /api/devices`
+Provision a new device on a controller.
 
 **Request body:**
 ```ts
 {
-  controllerId: string;   // UUID
-  name: string;           // max 100 chars
-  type: DeviceType;       // see above
-  pinNumber: number;      // integer 0-40
-  mqttTopic: string;      // max 150 chars
-  isActive?: boolean;     // default: true
+  controllerId: string;        // UUID
+  name: string;                // max 100 chars
+  type: DeviceType;
+  pinNumber: number;           // integer 0-40
+  mqttTopic: string;           // max 150 chars
+  automationMode?: AutomationMode; // default MANUAL
+  isActive?: boolean;          // default true
 }
 ```
 
-**Response `201`** — Full Device object.
+**Response `201`** — Full `Device` object.
 **`400`** — `{ error: "Failed to map new hardware device" }`
 
-### `PUT /api/device/:id`
-Update device configuration.
+### `POST /api/devices/batch`
+Bulk-provision multiple devices on a single controller.
+
+**Request body:**
+```ts
+{
+  controllerId: string;        // UUID
+  devices: {
+    name: string;              // max 100 chars
+    type: DeviceType;
+    pinNumber: number;         // 0-40
+    mqttTopic: string;         // max 150 chars
+    automationMode?: AutomationMode;
+    isActive?: boolean;        // default true
+  }[];                          // min 1
+}
+```
+
+**Response `201`** — Array of created `Device` objects.
+**`400`** — `{ error: "Failed to map batch hardware devices" }`
+
+### `PUT /api/devices/:id`
+Update device configuration. `controllerId` is **immutable** (delete + recreate to move a device to a different Pi).
 
 **Request body:**
 ```ts
 {
   name?: string;
   type?: DeviceType;
-  pinNumber?: number;      // 0-40
-  mqttTopic?: string;      // max 150 chars
+  pinNumber?: number;          // 0-40
+  mqttTopic?: string;          // max 150 chars
+  automationMode?: AutomationMode;
   isActive?: boolean;
 }
 ```
 
-**Response `200`** — Updated Device object.
+**Response `200`** — Updated `Device` object.
 **`400`** — `{ error: "Hardware parameter update rejected" }`
 
-### `DELETE /api/device/:id`
-Remove a device.
+### `DELETE /api/devices/:id`
+Remove a device. **Cascades** to all `DeviceStateLog` rows and all `AutomationRule` rows attached to it.
 
 **Response `204`** — No body.
 **`404`** — `{ error: "Hardware profile deletion failed" }`
+
+### `POST /api/devices/:id/command`
+Send an immediate ON/OFF command (source = `MANUAL`).
+
+**Request body:**
+```ts
+{ action: "ON" | "OFF"; }
+```
+
+**Side effects (single transaction):**
+- `Device.isActive` updated to match the action.
+- A `DeviceStateLog` row is written with `source: "MANUAL"`.
+- The server publishes an MQTT command to `devices/<id>/commands` with payload `{ action, pin, timestamp }`.
+
+**Response `200`** — `{ deviceId, action, timestamp }`.
+**`404`** — `{ error: "Device command dispatch failed" }`
 
 ---
 
@@ -255,7 +332,7 @@ Remove a sensor. **Cascades** to all telemetry rows associated with the sensor (
 ## Grow Cycles
 
 ### `GET /api/grow-cycles`
-List all grow cycles (includes basic controller info).
+List all grow cycles (includes basic controller info). Historical (`isActive = false`) cycles are included — they remain in the database for retrospective review.
 
 **Response `200`** — Array of:
 ```ts
@@ -275,7 +352,7 @@ List all grow cycles (includes basic controller info).
 ```
 
 ### `GET /api/grow-cycles/:id`
-Get a grow cycle with full nested details (phases, device configs, devices).
+Get a grow cycle with full nested details (phases, each phase's environment rows). **Devices are not included** here — devices are owned by the controller (see `GET /api/devices/controller/:controllerId`).
 
 **Response `200`** — GrowCycle plus:
 ```ts
@@ -291,27 +368,19 @@ Get a grow cycle with full nested details (phases, device configs, devices).
     isActive: boolean;
     startAt: string | null;        // Date only: "YYYY-MM-DD"
     endAt: string | null;          // Date only: "YYYY-MM-DD"
+    dayStartMinutes: number;       // 0..1440 — minutes-from-midnight the photoperiod DAY begins
+    dayDurationMinutes: number;    // 0..1440 — how long the day lasts
     createdAt: string;
     updatedAt: string;
-    deviceConfigs: {
-      id: string;
-      growPhaseId: string;
-      deviceId: string;
-      triggerType: TriggerType;
-      configData: Record<string, unknown>;  // JSON payload
-      createdAt: string;
-      updatedAt: string;
-      device: Device;              // Full Device object
-    }[];
+    environments: PhaseEnvironment[]; // up to 2 rows: period = DAY or NIGHT
   }[];
 }
 ```
-Where `TriggerType` is: `"SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF"`
 
 **`404`** — `{ error: "Grow cycle record not found" }`
 
 ### `POST /api/grow-cycles`
-Create a new grow cycle. **Auto-generates 4 default phases** with device configs based on the controller's active devices.
+Create a new grow cycle. Phases are **not** auto-generated — create them separately via `POST /api/grow-phases`. Devices are **not** provisioned here — devices are owned by the controller, not the cycle (see `POST /api/devices`).
 
 **Request body:**
 ```ts
@@ -322,19 +391,9 @@ Create a new grow cycle. **Auto-generates 4 default phases** with device configs
 }
 ```
 
-**Default phases created automatically:**
-
-| # | Phase Name | Duration | Light Config | Exhaust Config | Pump Config |
-|---|---|---|---|---|---|
-| 1 | Seedling / Clone | 14d | SCHEDULE, 18h on @06:00 | THRESHOLD, TEMP > 25°C | — |
-| 2 | Vegetative Stage | 30d | SCHEDULE, 22h on @06:00 | THRESHOLD, TEMP > 26.5°C | — |
-| 3 | Flowering / Bloom | 60d | SCHEDULE, 12h on @06:00 | THRESHOLD, TEMP > 26°C | — |
-| 4 | Curing / Harvest | 7d | ALWAYS_OFF | — | ALWAYS_OFF |
-
-Configs are only created if the controller has an active device of the corresponding type.
-
-**Response `201`** — Full GrowCycle with nested phases and deviceConfigs (same shape as `GET /:id`).
+**Response `201`** — Full GrowCycle with nested phases and their environments.
 **`400`** — `{ error: "Failed to create grow cycle record" }`
+**`409`** — `{ error: "Controller already has an active grow cycle. End the current grow before starting a new one." }`
 
 ### `PUT /api/grow-cycles/:id`
 Update a grow cycle.
@@ -343,7 +402,6 @@ Update a grow cycle.
 ```ts
 {
   name?: string;
-  controllerId?: string;
   isActive?: boolean;
   startAt?: string;              // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
 }
@@ -351,19 +409,36 @@ Update a grow cycle.
 
 **Response `200`** — Updated GrowCycle (without nested relations).
 **`400`** — `{ error: "Failed to update grow cycle record" }`
+**`409`** — `{ error: "Controller already has an active grow cycle. End the current grow before starting a new one." }`
 
 ### `DELETE /api/grow-cycles/:id`
-Delete a grow cycle (cascades to phases, device configs, and telemetry).
+Delete a grow cycle (cascades to phases, phase environments, automation rules, and telemetry). Devices are NOT deleted (they belong to the controller, not the cycle).
 
 **Response `204`** — No body.
 **`404`** — `{ error: "Record could not be deleted" }`
+
+### `POST /api/grow-cycles/:id/skip-phase?today=YYYY-MM-DD`
+Advance the active phase to the next one; trim the active phase's duration to its elapsed days. Cascades the date shift across all subsequent phases.
+
+**Response `200`** — Updated GrowCycle with re-cascaded phase dates.
+**`400`** — `{ error: "Grow cycle has not started yet" | "No active phase to skip" | "Cannot skip the final grow phase" | "Server could not determine today's date" }`
+**`404`** — `{ error: "Grow cycle record not found" }`
+
+### `POST /api/grow-cycles/:id/end-grow?today=YYYY-MM-DD`
+Trim the active phase's duration to its elapsed days, canonicalize all phase dates, mark the cycle inactive, and deactivate all phases. Historical telemetry, device state logs, and rules are preserved on the controller.
+
+**Response `200`** — Updated GrowCycle (with `isActive: false`).
+**`400`** — `{ error: "Grow cycle has not started yet" | "No active phase to end" | "Server could not determine today's date" }`
+**`404`** — `{ error: "Grow cycle record not found" }`
 
 ---
 
 ## Grow Phases
 
+A `GrowPhase` represents a stage of a grow cycle. Each phase carries its own day/night clock schedule and a per-phase `PhaseEnvironment` row per period (`DAY` / `NIGHT`).
+
 ### `GET /api/grow-phases/cycle/:growCycleId`
-List all phases for a grow cycle (includes device configs).
+List all phases for a grow cycle, in `order` ascending.
 
 **Response `200`** — Array of:
 ```ts
@@ -376,25 +451,16 @@ List all phases for a grow cycle (includes device configs).
   isActive: boolean;
   startAt: string | null;        // Date only: "YYYY-MM-DD"
   endAt: string | null;          // Date only: "YYYY-MM-DD"
+  dayStartMinutes: number;       // 0..1440 (default 360 = 06:00)
+  dayDurationMinutes: number;    // 0..1440 (default 1080 = 18h)
   createdAt: string;
   updatedAt: string;
-  deviceConfigs: {
-    id: string;
-    growPhaseId: string;
-    deviceId: string;
-    triggerType: TriggerType;
-    configData: Record<string, unknown>;
-    createdAt: string;
-    updatedAt: string;
-    device: Device;              // Full Device object
-  }[];
 }
 ```
 **`400`** — `{ error: "Failed to retrieve phases for this cycle" }`
 
 ### `GET /api/grow-phases/:id`
-Get a single phase with device configs.
-
+Get a single phase.
 **Response `200`** — Same shape as individual phase above.
 **`404`** — `{ error: "Grow phase record not found" }`
 
@@ -411,10 +477,12 @@ Create a custom phase.
   isActive?: boolean;     // default: false
   startAt?: string;       // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
   endAt?: string;         // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
+  dayStartMinutes?: number;    // 0..1440, default 360 (06:00)
+  dayDurationMinutes?: number; // 0..1440, default 1080 (18h)
 }
 ```
 
-**Response `201`** — Full GrowPhase object (without deviceConfigs).
+**Response `201`** — Full GrowPhase object.
 **`400`** — `{ error: "Failed to create grow phase record" }`
 
 ### `PUT /api/grow-phases/:id`
@@ -424,11 +492,13 @@ Update a phase.
 ```ts
 {
   name?: string;
-  order?: number;          // >= 1
-  durationDays?: number;   // >= 1
+  order?: number;                 // >= 1
+  durationDays?: number;          // >= 1
   isActive?: boolean;
-  startAt?: string;        // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
-  endAt?: string;          // Date only: "YYYY-MM-DD" (no timestamp). Date-time strings are rejected.
+  startAt?: string;               // Date only: "YYYY-MM-DD"
+  endAt?: string;                 // Date only: "YYYY-MM-DD"
+  dayStartMinutes?: number;       // 0..1440
+  dayDurationMinutes?: number;    // 0..1440
 }
 ```
 
@@ -436,131 +506,216 @@ Update a phase.
 **`400`** — `{ error: "Failed to update grow phase record" }`
 
 ### `DELETE /api/grow-phases/:id`
-Delete a phase.
-
+Delete a phase (cascades to its phase environments and automation rules).
 **Response `204`** — No body.
 **`404`** — `{ error: "Record could not be deleted" }`
 
+### `PATCH /api/grow-phases/:id/activate`
+Activate this phase and clear `isActive` on all other phases in the same grow cycle.
+**Response `200`** — Updated GrowPhase object.
+**`404`** — `{ error: "Grow phase could not be activated" }`
+
 ---
 
-## Device Configs
+## Phase Environments
 
-A `DeviceConfig` is the rule that ties a physical `Device` to a `GrowPhase` — it controls when and how the device is triggered. Device configs are created both by grow-cycle auto-generation (see `POST /api/grow-cycles`) and via the standalone endpoints below.
+A `PhaseEnvironment` is a per-phase, per-period environmental threshold set. Each phase has at most one row for `DAY` and one for `NIGHT`. A null value on a threshold means "unconstrained" (the automation engine will not react to that sensor type in that period).
 
 ### Model
 
 ```ts
 {
   id: string;
-  growPhaseId: string;            // UUID
-  deviceId: string;               // UUID
-  triggerType: "SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
-  configData: ConfigData;         // Discriminated union — shape depends on triggerType
+  growPhaseId: string;
+  period: "DAY" | "NIGHT";
+  tempMin: number | null;
+  tempMax: number | null;
+  tempTarget: number | null;
+  humidityMin: number | null;
+  humidityMax: number | null;
+  humidityTarget: number | null;
+  co2Min: number | null;
+  co2Max: number | null;
+  co2Target: number | null;
   createdAt: string;
   updatedAt: string;
-  device: Device;                 // Full Device object (included in all read responses)
 }
 ```
 
-### `configData` shapes (discriminated union by `triggerType`)
+### `GET /api/grow-phases/:growPhaseId/environment`
+Return both `DAY` and `NIGHT` environment rows for the given phase. Missing periods are returned as `null` (so the client can tell `DAY` exists and `NIGHT` doesn't vs. both being absent).
 
-The API accepts **multiple known variants** for each trigger type for backwards compatibility with data already in the database. New clients should prefer the canonical (auto-generated) form.
-
-| `triggerType` | Canonical form | Alternative form (also accepted) |
-|---|---|---|
-| `SCHEDULE` | `{ onTime: "06:00", durationHours: 18 }` | `{ onTime: "06:00", offTime: "00:00" }` |
-| `THRESHOLD` | `{ metric: "TEMP", high: 26.5 }` | `{ sensor: "TEMPERATURE", condition: "GREATER_THAN", value: 26.5, action: "ON" }` |
-| `ALWAYS_ON` | `{}` | any object (lenient — extra keys ignored) |
-| `ALWAYS_OFF` | `{}` | any object (lenient — extra keys ignored) |
-
-- `onTime` / `offTime` must match `^([01][0-9]|2[0-3]):[0-5][0-9]$` (24h `HH:MM`).
-- `durationHours` must be a number in `[0.1, 24]`.
-- `condition` must be one of: `"GREATER_THAN" | "LESS_THAN" | "GREATER_THAN_OR_EQUAL" | "LESS_THAN_OR_EQUAL" | "EQUAL"`.
-- `action` must be one of: `"ON" | "OFF" | "TOGGLE"`.
-
-### `GET /api/device-configs/phase/:phaseId`
-
-List all device configs for a phase. Always includes the full `device` object on each entry.
-
-**Response `200`** — Array of `DeviceConfig` (with nested `device`), ordered by `createdAt` ascending.
-
-**`400`** — `{ error: "Failed to load device configurations" }`
-
-### `GET /api/device-configs/:id`
-
-Fetch a single device config by ID.
-
-**Response `200`** — `DeviceConfig` (with nested `device`).
-
-**`404`** — `{ error: "Device configuration not found" }`
-
-### `POST /api/device-configs`
-
-Create a device config linking a device to a phase with a trigger rule.
-
-**Request body** (discriminated by `triggerType`):
-
+**Response `200`**
 ```ts
-// SCHEDULE — one of:
-{ growPhaseId: string; deviceId: string; triggerType: "SCHEDULE";
-  configData: { onTime: "06:00"; durationHours: 18 } }
-| { growPhaseId: string; deviceId: string; triggerType: "SCHEDULE";
-  configData: { onTime: "06:00"; offTime: "00:00" } }
+{
+  growPhaseId: string;
+  day: PhaseEnvironment | null;
+  night: PhaseEnvironment | null;
+}
+```
+**`400`** — `{ error: "Failed to load phase environment" }`
 
-// THRESHOLD — one of:
-| { growPhaseId: string; deviceId: string; triggerType: "THRESHOLD";
-  configData: { metric: "TEMP"; high: 26.5 } }
-| { growPhaseId: string; deviceId: string; triggerType: "THRESHOLD";
-  configData: { sensor: "TEMPERATURE"; condition: "GREATER_THAN"; value: 26.5; action: "ON" } }
+### `PUT /api/grow-phases/:growPhaseId/environment/:period`
+Upsert a phase environment row. `period` is `DAY` or `NIGHT`. Pass any subset of the threshold fields; omitted fields are cleared (set to `null`). Setting all thresholds to `null` is a valid "no constraints" configuration.
 
-// ALWAYS_ON / ALWAYS_OFF — any object (lenient)
-| { growPhaseId: string; deviceId: string; triggerType: "ALWAYS_ON" | "ALWAYS_OFF";
-  configData: Record<string, unknown> }
+**URL params:**
+- `:growPhaseId` — UUID
+- `:period` — `DAY` | `NIGHT`
+
+**Request body:**
+```ts
+{
+  tempMin?: number | null;
+  tempMax?: number | null;
+  tempTarget?: number | null;
+  humidityMin?: number | null;
+  humidityMax?: number | null;
+  humidityTarget?: number | null;
+  co2Min?: number | null;
+  co2Max?: number | null;
+  co2Target?: number | null;
+}
 ```
 
-**Response `201`** — Created `DeviceConfig` (with nested `device`).
+**Response `200`** — The upserted `PhaseEnvironment` row.
+**`400`** — `{ error: "Failed to upsert phase environment" }`
+**`404`** — `{ error: "Grow phase record not found" }`
 
-**`400`** — `{ error: "Failed to create device configuration" }` — returned for any validation failure (unknown `triggerType`, missing `configData` fields, bad time format, non-UUID IDs, etc.) or DB error.
-
-### `PUT /api/device-configs/:id`
-
-Update a device config's trigger rule. **`triggerType` and `configData` must be sent together** as a consistent pair — partial updates are rejected.
-
-- `growPhaseId` and `deviceId` are **immutable** after creation. To move a config to a different phase or device, delete and recreate it.
-
-**Request body** — same shape as `POST` minus `growPhaseId` and `deviceId`.
-
-**Response `200`** — Updated `DeviceConfig` (with nested `device`).
-
-**`400`** — `{ error: "Failed to update device configuration" }` — validation or DB error.
-
-### `DELETE /api/device-configs/:id`
-
-Remove a device config.
+### `DELETE /api/grow-phases/:growPhaseId/environment/:period`
+Remove a phase environment row.
 
 **Response `204`** — No body.
-
-**`404`** — `{ error: "Device configuration deletion failed" }`
+**`404`** — `{ error: "Phase environment row not found" }`
 
 ---
+
+## Automation Rules
+
+An `AutomationRule` is an explicit per-device trigger. A rule is scoped to exactly one of:
+
+- a `GrowPhase` (preferred — per-stage behavior like "vegetative phase keeps humidity high"), **or**
+- a `GrowCycle` (rare — cycle-wide baseline behavior, applies in any active phase).
+
+A rule watches one sensor type and fires one device action when its condition is met.
+
+### Model
+
+```ts
+{
+  id: string;
+  growCycleId: string | null;     // exactly one of (growCycleId, growPhaseId) is non-null
+  growPhaseId: string | null;
+  deviceId: string;               // UUID of the Device to actuate
+  watchedSensorType: SensorType;  // which telemetry stream triggers this rule
+  period: "DAY" | "NIGHT" | null; // null = applies in BOTH day and night
+  condition: RuleCondition;       // see below
+  action: "ON" | "OFF";
+  cooldownSeconds: number;        // default 180 — min gap between two auto commands
+  enabled: boolean;               // default true
+  lastTriggeredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
+`RuleCondition` is one of:
+
+| Value | When it fires | Engine consults |
+|---|---|---|
+| `"ABOVE_MAX"` | Latest telemetry value for `watchedSensorType` exceeds the active phase's `PhaseEnvironment.*Max` for the current period. | `PhaseEnvironment.tempMax / humidityMax / co2Max` (matching sensor type). |
+| `"BELOW_MIN"` | Latest telemetry value for `watchedSensorType` falls below the active phase's `PhaseEnvironment.*Min` for the current period. | `PhaseEnvironment.tempMin / humidityMin / co2Min`. |
+| `"SCHEDULE_ON"` | At `dayStartMinutes` (start of `DAY`). | Active phase's clock schedule. |
+| `"SCHEDULE_OFF"` | At `dayStartMinutes + dayDurationMinutes` (start of `NIGHT`). | Active phase's clock schedule. |
+
+Cooldown is checked against `now - lastTriggeredAt` for the same rule (default 180s). A `null` period is treated as "applies in both `DAY` and `NIGHT`". For `SCHEDULE_ON` / `SCHEDULE_OFF` the server's evaluation period is `period` itself (must be `DAY` or `NIGHT` — using `null` for schedule rules is invalid and rejected with `400`).
+
+### `GET /api/automation-rules/grow-cycle/:growCycleId`
+List all rules scoped to a grow cycle (cycle-level rules only — does not include rules scoped to a phase within that cycle).
+
+**Response `200`** — Array of `AutomationRule`.
+**`400`** — `{ error: "Failed to load automation rules" }`
+
+### `GET /api/automation-rules/grow-phase/:growPhaseId`
+List all rules scoped to a grow phase.
+
+**Response `200`** — Array of `AutomationRule`.
+**`400`** — `{ error: "Failed to load automation rules" }`
+
+### `GET /api/automation-rules/device/:deviceId`
+List all rules that actuate a specific device.
+
+**Response `200`** — Array of `AutomationRule`.
+**`400`** — `{ error: "Failed to load automation rules" }`
+
+### `POST /api/automation-rules`
+Create a rule.
+
+**Request body:**
+```ts
+{
+  growCycleId?: string;            // exactly one of these must be set
+  growPhaseId?: string;
+  deviceId: string;
+  watchedSensorType: SensorType;   // TEMPERATURE | HUMIDITY | CO2 | PH | EC
+  period?: "DAY" | "NIGHT";        // null = both. Required for SCHEDULE_ON / SCHEDULE_OFF.
+  condition: RuleCondition;        // ABOVE_MAX | BELOW_MIN | SCHEDULE_ON | SCHEDULE_OFF
+  action: "ON" | "OFF";
+  cooldownSeconds?: number;        // default 180
+  enabled?: boolean;               // default true
+}
+```
+
+**Response `201`** — Full `AutomationRule` object.
+**`400`** — `{ error: "Failed to create automation rule" }` (also returned when the scope / period / condition invariants are violated; message identifies the violation).
+
+### `PUT /api/automation-rules/:id`
+Update a rule. All fields except `id` are optional; only provided fields are updated. Scope (`growCycleId` / `growPhaseId`) is **immutable** — delete + recreate to re-scope.
+
+**Request body:**
+```ts
+{
+  deviceId?: string;
+  watchedSensorType?: SensorType;
+  period?: "DAY" | "NIGHT" | null;
+  condition?: RuleCondition;
+  action?: "ON" | "OFF";
+  cooldownSeconds?: number;
+  enabled?: boolean;
+}
+```
+
+**Response `200`** — Updated `AutomationRule` object.
+**`400`** — `{ error: "Failed to update automation rule" }`
+
+### `PATCH /api/automation-rules/:id/toggle`
+Flip the `enabled` flag. Convenience for pausing/resuming a rule without delete + recreate.
+
+**Response `200`** — `{ id, enabled }`.
+**`400`** — `{ error: "Failed to toggle automation rule" }`
+
+### `DELETE /api/automation-rules/:id`
+Delete a rule.
+
+**Response `204`** — No body.
+**`400`** — `{ error: "Failed to delete automation rule" }`
 
 ---
 
 ## Telemetry
 
-Telemetry readings are produced by physical `Sensor`s. Each reading is a single numeric value (`value`) tagged with the sensor that produced it (`sensorId`) and the type of measurement (`sensorType`). Readings are written to the database and broadcast live to the frontend via Socket.IO.
+Telemetry readings are produced by physical `Sensor`s. Each reading is a single numeric value (`value`) tagged with the sensor that produced it (`sensorId`) and the type of measurement (`sensorType`). Readings are written to the database, broadcast live to the frontend via Socket.IO, and **fed into the threshold evaluator** which may trigger `AutomationRule`s.
 
 ### Model
 
 ```ts
 {
   id: string;
-  growCycleId: string;   // Active grow cycle of the sensor's controller
-  sensorId: string;      // Sensor that produced the reading
+  growCycleId: string;
+  sensorId: string;
   sensorType: SensorType;
   value: number;
-  createdAt: string;     // ISO 8601
-  sensor: {              // Slim summary of the source sensor (always included in responses)
+  createdAt: string;
+  sensor: {
     id: string;
     name: string;
     type: SensorType;
@@ -571,35 +726,30 @@ Telemetry readings are produced by physical `Sensor`s. Each reading is a single 
 
 ### `GET /api/telemetry/grow-cycle/:growCycleId`
 List every telemetry reading for a grow cycle, newest first. Includes a slim `sensor` summary on each row.
-
 **Response `200`** — Array of `Telemetry` (with nested `sensor`).
 **`400`** — `{ error: "Failed to load telemetry readings" }`
 
 ### `GET /api/telemetry/grow-cycle/:growCycleId/latest`
 Return the most-recent reading **per physical sensor** (not per `sensorType`) for the grow cycle. A `TEMP_HUMIDITY` sensor therefore contributes up to two rows (one temp, one humidity), each representing its own latest sample.
-
 **Response `200`** — Array of `Telemetry` (with nested `sensor`).
 **`400`** — `{ error: "Failed to load latest telemetry" }`
 
 ### `GET /api/telemetry/grow-cycle/:growCycleId/range?from=...&to=...`
-Return telemetry rows for a grow cycle whose `createdAt` falls within the given ISO 8601 window. Ordered by `createdAt` ascending (good for chart plotting).
-
+Return telemetry rows for a grow cycle whose `createdAt` falls within the given ISO 8601 window. Ordered by `createdAt` ascending.
 **Response `200`** — Array of `Telemetry` (with nested `sensor`).
 **`400`** — `{ error: "Failed to load telemetry range" }`
 
 ### `POST /api/telemetry`
-Ingest a single telemetry reading manually. In production, MQTT is the canonical ingestion path; this endpoint is for tests and admin tooling.
-
+Ingest a single telemetry reading manually. In production, MQTT is the canonical ingestion path; this endpoint is for tests and admin tooling. The manual path does **not** invoke the threshold evaluator — only MQTT ingestion does.
 **Request body:**
 ```ts
 {
-  growCycleId: string;  // UUID
-  sensorId: string;     // UUID — must reference a Sensor owned by a Controller that owns this grow cycle
+  growCycleId: string;
+  sensorId: string;
   sensorType: SensorType;
   value: number;
 }
 ```
-
 **Response `201`** — Created `Telemetry` (with nested `sensor`).
 **`400`** — `{ error: "Failed to ingest telemetry reading" }`
 
@@ -616,15 +766,25 @@ Ingest a single telemetry reading manually. In production, MQTT is the canonical
     ]
   }
   ```
-  - `sensorType` must match the receiving sensor's registered type. For `TEMP_HUMIDITY` probes, both readings may be sent in a single payload.
-- The server resolves the sensor's controller's **currently active** grow cycle and writes one `Telemetry` row per reading against it. The sensor's `lastActive` is updated.
-- If the sensor's controller has no active grow cycle, the payload is dropped and a warning is logged (the `growCycleId` column is non-null by design).
+- The server resolves the sensor's controller's currently active grow cycle and writes one `Telemetry` row per reading against it. The sensor's `lastActive` is updated.
+- After persisting, the threshold evaluator runs against every reading (see Automation overview). Rules for the active grow cycle/phase that match the reading's `sensorType` may fire ON/OFF commands to the corresponding device.
+- If the sensor's controller has no active grow cycle, the payload is dropped and a warning is logged (the `growCycleId` column is non-null by design). The MQTT state feedback path (`devices/<id>/state`) still works — device state is independent of the active grow cycle.
+
+### MQTT Device State Feedback
+
+- Pi publishes to: **`devices/<deviceId>/state`**
+- Backend subscribed to: **`devices/+/state`**
+- Payload (JSON):
+  ```ts
+  { action: "ON" | "OFF"; timestamp: number; }
+  ```
+- The server reconciles `Device.isActive` to match the reported state and writes a `DeviceStateLog` row with `source: "AUTO" reason: "state confirmed"`. This row becomes the source of truth for the evaluator's hysteresis check on subsequent ticks.
 
 ### Socket.IO Events
 
 | Event | Direction | Payload |
 |---|---|---|
-| `ui_command` | Frontend → Server | `{ deviceId: string, action: string, pin: number }` |
+| `ui_command` | Frontend → Server | `{ deviceId: string, action: "ON"\|"OFF", pin: number }` |
 | `frontend_telemetry` | Server → Frontend | `{ sensorId, sensorName, sensorType, value, growCycleId, timestamp }` (one event per persisted reading) |
 
 ---
@@ -636,7 +796,7 @@ All error responses return:
 { error: string }
 ```
 
-A `404` is returned when a resource by ID is not found. A `400` is returned for validation or database operation failures.
+A `404` is returned when a resource by ID is not found. A `400` is returned for validation or database operation failures. A `409` is returned when a controller already has an active grow cycle.
 
 ---
 
@@ -644,15 +804,22 @@ A `404` is returned when a resource by ID is not found. A `400` is returned for 
 
 ```ts
 // Enums
-type DeviceType = "LIGHT" | "EXHAUST_FAN" | "INTAKE_FAN" | "CIRCULATION_FAN"
+type DeviceType =
+  | "LIGHT" | "EXHAUST_FAN" | "INTAKE_FAN" | "CIRCULATION_FAN"
   | "WATER_PUMP" | "AIR_CONDITIONER" | "HEATER" | "HUMIDIFIER"
   | "DEHUMIDIFIER" | "CO2_INJECTOR";
 
-type TriggerType = "SCHEDULE" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
+type AutomationMode =
+  | "MANUAL" | "SCHEDULED" | "THRESHOLD" | "ALWAYS_ON" | "ALWAYS_OFF";
 
 type SensorType = "HUMIDITY" | "TEMPERATURE" | "TEMP_HUMIDITY" | "CO2" | "PH" | "EC";
-
 type SensorProtocol = "I2C" | "SPI" | "UART" | "RS485";
+
+type DayNightPeriod = "DAY" | "NIGHT";
+
+type RuleCondition = "ABOVE_MAX" | "BELOW_MIN" | "SCHEDULE_ON" | "SCHEDULE_OFF";
+
+type DeviceAction = "ON" | "OFF";
 
 // Models
 interface Controller {
@@ -667,11 +834,12 @@ interface Controller {
 
 interface Device {
   id: string;
-  growCycleId: string;          // Devices are now scoped per-grow (not per-controller)
+  controllerId: string;          // Devices are owned by the Controller, not by a grow cycle.
   name: string;
   type: DeviceType;
   pinNumber: number;
   mqttTopic: string;
+  automationMode: AutomationMode;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -682,7 +850,7 @@ interface GrowCycle {
   controllerId: string;
   name: string;
   isActive: boolean;
-  startAt: string | null;        // Date only: "YYYY-MM-DD" (no timestamp)
+  startAt: string | null;        // Date only: "YYYY-MM-DD"
   createdAt: string;
   updatedAt: string;
 }
@@ -694,31 +862,46 @@ interface GrowPhase {
   order: number;
   durationDays: number;
   isActive: boolean;
-  startAt: string | null;    // Date only: "YYYY-MM-DD"
-  endAt: string | null;      // Date only: "YYYY-MM-DD"
+  startAt: string | null;        // Date only: "YYYY-MM-DD"
+  endAt: string | null;          // Date only: "YYYY-MM-DD"
+  dayStartMinutes: number;       // 0..1440 — minutes-from-midnight the photoperiod DAY begins
+  dayDurationMinutes: number;    // 0..1440 — how long DAY lasts; NIGHT = 1440 - this
   createdAt: string;
   updatedAt: string;
 }
 
-interface DeviceConfig {
+interface PhaseEnvironment {
   id: string;
   growPhaseId: string;
-  deviceId: string;
-  triggerType: TriggerType;
-  configData: ConfigData;       // Discriminated union — see below
+  period: DayNightPeriod;
+  tempMin: number | null;
+  tempMax: number | null;
+  tempTarget: number | null;
+  humidityMin: number | null;
+  humidityMax: number | null;
+  humidityTarget: number | null;
+  co2Min: number | null;
+  co2Max: number | null;
+  co2Target: number | null;
   createdAt: string;
   updatedAt: string;
-  device: Device;               // Always included in API responses
 }
 
-// Discriminated union — narrow with `deviceConfig.triggerType`
-type ConfigData =
-  | { triggerType: "SCHEDULE"; configData: { onTime: string; durationHours: number } | { onTime: string; offTime: string } }
-  | { triggerType: "THRESHOLD"; configData: { metric: string; high: number } | { sensor: string; condition: "GREATER_THAN" | "LESS_THAN" | "GREATER_THAN_OR_EQUAL" | "LESS_THAN_OR_EQUAL" | "EQUAL"; value: number; action: "ON" | "OFF" | "TOGGLE" } }
-  | { triggerType: "ALWAYS_ON" | "ALWAYS_OFF"; configData: Record<string, unknown> };
-
-// Helper to access the typed configData given a triggerType
-type ConfigDataFor<T extends TriggerType> = Extract<ConfigData, { triggerType: T }>["configData"];
+interface AutomationRule {
+  id: string;
+  growCycleId: string | null;     // exactly one of (growCycleId, growPhaseId) is non-null
+  growPhaseId: string | null;
+  deviceId: string;
+  watchedSensorType: SensorType;
+  period: DayNightPeriod | null;  // null = applies in both
+  condition: RuleCondition;
+  action: DeviceAction;
+  cooldownSeconds: number;        // default 180
+  enabled: boolean;               // default true
+  lastTriggeredAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface Sensor {
   id: string;
@@ -737,69 +920,98 @@ interface Telemetry {
   id: string;
   growCycleId: string;
   sensorId: string;              // Non-null FK to the producing Sensor
-  sensorType: SensorType;        // Enum (TEMP_HUMIDITY now included)
+  sensorType: SensorType;
   value: number;
   createdAt: string;
-  sensor: {                      // Slim summary — always returned
+  sensor: {
     id: string;
     name: string;
     type: SensorType;
     protocol: SensorProtocol;
   };
 }
+
+interface DeviceStateLog {
+  id: string;
+  deviceId: string;
+  action: "ON" | "OFF";
+  source: "MANUAL" | "AUTO" | "UI";
+  //   MANUAL — REST command endpoint (`POST /api/devices/:id/command`)
+  //   UI     — Socket.IO `ui_command` event from the dashboard
+  //   AUTO   — written by the threshold evaluator, the day/night light scheduler,
+  //            and the closed-loop device state handler
+  reason: string | null;         // e.g. "temp 31.2°C > max 28°C (DAY)" or "state confirmed"
+  createdAt: string;
+}
 ```
+
+---
+
+## DeviceStateLog (audit trail)
+
+Every ON/OFF command issued to a device is recorded in the `DeviceStateLog` table for audit and debugging.
+
+| Write path | `source` value | When |
+|---|---|---|
+| `POST /api/devices/:id/command` | `MANUAL` | Caller invokes the REST command endpoint. State update and log write commit in a single transaction. |
+| Socket.IO `ui_command` event | `UI` | Frontend dashboard sends a toggle. Log is written fire-and-forget (errors are logged but do not affect the MQTT publish). |
+| Light scheduler (60s tick) | `AUTO` | A `SCHEDULE_ON` or `SCHEDULE_OFF` rule fires for the current day/night boundary. `reason` is e.g. `"day cycle start"`. |
+| Threshold evaluator (telemetry-driven) | `AUTO` | An `ABOVE_MAX` or `BELOW_MIN` rule fires. `reason` is e.g. `"temp 31.2°C > max 28°C (DAY)"`. |
+| Device state feedback handler | `AUTO` | The Pi publishes a `devices/<id>/state` confirmation. `reason` is `"state confirmed"`. This row is the source of truth for the evaluator's hysteresis check on subsequent ticks. |
+
+There is currently no read endpoint for `DeviceStateLog` — query the table directly if needed. Indexed on `deviceId` and `createdAt`.
 
 ---
 
 ## Frontend Integration Notes
 
-This section highlights the changes the FE must implement to align with the new Sensor model.
+### 1. Devices belong to the Controller, not to grow cycles
 
-### 1. New `Sensor` resource
+- Devices persist across all grow cycles on a controller. The same light stays wired to the same Pi between grows.
+- Use `GET /api/devices/controller/:controllerId` to list the persistent device inventory of a tent.
+- Grow cycles no longer carry a `devices` array. Use `GET /api/grow-cycles/:id` to fetch a cycle (phases + environments only) and call `GET /api/devices/controller/:controllerId` separately.
+- `POST /api/devices` provisions a device on a controller; `POST /api/grow-cycles` no longer accepts a `devices` array.
 
-- New REST module: `GET / POST / PUT / DELETE /api/sensors[/:id]`, plus `GET /api/sensors/controller/:controllerId`.
-- The existing controller create screen **must** now allow attaching zero or more sensors in the same call (see the updated `POST /api/controllers` request body). On a re-registration (`upsert` by `macAddress`), the `sensors` array in the payload is **ignored** — sensors are managed exclusively via `/api/sensors` after the initial seed.
-- New sensor registration screen / dialog with fields: `name`, `type` (one of `SensorType`), `mqttTopic`, `pinNumbers` (multi-select of GPIO pins 0-40), `protocol` (one of `SensorProtocol`).
-- Sensor edit screen: same fields, plus an `lastActive` badge (read-only, server-managed; updated on every MQTT reading).
+### 2. Per-phase day/night schedule and thresholds
 
-### 2. Telemetry shape changes
+- Each `GrowPhase` carries `dayStartMinutes` and `dayDurationMinutes` (the server defaults are 360 and 1080, i.e. an 18/6 photoperiod starting at 06:00).
+- A phase has at most one `PhaseEnvironment` per `period` (`DAY` / `NIGHT`). Fetch both via `GET /api/grow-phases/:id/environment`. Configure via `PUT /api/grow-phases/:id/environment/:period`. A null threshold means "unconstrained".
+- Editing UI: a `phase.edit` form with a per-period (DAY/NIGHT) sub-grid of (temp, humidity, co2) min/max/target fields.
 
-- `Telemetry.sensorType` is now an **enum** (was a free string). The new member `TEMP_HUMIDITY` must be handled in any UI that lists/charts sensor types.
-- Every telemetry row now carries a non-null `sensorId` and a nested `sensor` summary (`{ id, name, type, protocol }`). Charts and list views should display the **sensor name** (e.g. "DHT22 Ambient") rather than a generic type label, since the same `sensorType` may originate from multiple physical probes.
-- `GET /api/telemetry/grow-cycle/:id/latest` now returns one row **per physical sensor** (not per sensor type). A `TEMP_HUMIDITY` sensor will appear in this list with its most recent reading — which may be temperature OR humidity depending on which arrived last.
+### 3. Automation rules
 
-### 3. MQTT topic (firmware change)
+- Rules are scoped to a phase (preferred) or a cycle — exactly one. Configure via `POST /api/automation-rules` and `PUT /api/automation-rules/:id`.
+- Suggested UI: a `phase.edit` "Automation" tab that lists rules for that phase, with quick-add templates per device type:
+  - `EXHAUST_FAN` / `AIR_CONDITIONER` / `INTAKE_FAN` → `ABOVE_MAX` on `TEMPERATURE` → `ON` (with `OFF` rule on `BELOW_MIN - 0.5` if you want a deadband).
+  - `HEATER` → `BELOW_MIN` on `TEMPERATURE` → `ON`.
+  - `HUMIDIFIER` → `BELOW_MIN` on `HUMIDITY` → `ON`.
+  - `DEHUMIDIFIER` → `ABOVE_MAX` on `HUMIDITY` → `ON`.
+  - `CO2_INJECTOR` → `BELOW_MIN` on `CO2` → `ON` (typically scoped to `period: "DAY"`).
+  - `LIGHT` → `SCHEDULE_ON` at `dayStartMinutes` → `ON`, plus `SCHEDULE_OFF` at `dayStartMinutes + dayDurationMinutes` → `OFF`.
 
-The Pi firmware must publish telemetry to the new topic:
+### 4. MQTT topics (firmware contract)
 
-```
-sensors/<sensorId>/telemetry
-```
+| Direction | Topic | Payload |
+|---|---|---|
+| Pi → Server | `sensors/<sensorId>/telemetry` | `{ readings: [{ sensorType, value }] }` |
+| Server → Pi | `devices/<deviceId>/commands` | `{ action: "ON"\|"OFF", pin: number, timestamp: number }` |
+| Pi → Server | `devices/<deviceId>/state` | `{ action: "ON"\|"OFF", timestamp: number }` (closed-loop confirmation) |
 
-with the new payload shape:
+The Pi must publish `devices/<id>/state` whenever a relay actually changes. The server uses that to update `Device.isActive` and to provide hysteresis for the automation engine. State feedback also writes a `DeviceStateLog` row with `source: "AUTO" reason: "state confirmed"`, which becomes the evaluator's source of truth.
 
-```ts
-{
-  readings: [
-    { sensorType: "TEMPERATURE", value: 24.7 },
-    { sensorType: "HUMIDITY",    value: 58.1 }
-  ]
-}
-```
+### 5. Live telemetry and live device state
 
-The server rejects payloads whose `sensorType` doesn't match the sensor's registered type and drops the entire payload if the sensor's controller has no active grow cycle. The firmware should still retry — the server will pick up the readings once a grow cycle is started.
+- `frontend_telemetry` event payload: `{ sensorId, sensorName, sensorType, value, growCycleId, timestamp }`.
+- (Optional, future) `frontend_device_state` event: the server can broadcast updated `DeviceStateLog` rows to the FE for live state panels.
 
-### 4. Live telemetry
-
-- The `frontend_telemetry` Socket.IO event now carries `{ sensorId, sensorName, sensorType, value, growCycleId, timestamp }`. Existing handlers should switch from `deviceId` to `sensorId` for any state mapping.
-
-### 5. Migration checklist for the FE
+### 6. Migration checklist for the FE
 
 | Area | Action |
 |---|---|
-| Types | Replace `Telemetry.sensorType: string` with `SensorType`; add `sensorId` and nested `sensor`. Add new `Sensor`, `SensorType`, `SensorProtocol` types. |
-| Controller create form | Add a sensor-list sub-form (name, type, mqttTopic, pinNumbers, protocol) submitted in the same `POST /api/controllers` call. |
-| Controller edit form | No sensor editing here — direct the user to the sensors page. |
-| Sensor inventory | New page/section listing `/api/sensors/controller/:id` with create/edit/delete actions. |
+| Types | Update `Device` (now `controllerId` + `automationMode`). Add `AutomationMode`, `DayNightPeriod`, `RuleCondition`, `DeviceAction`, `PhaseEnvironment`, `AutomationRule`. |
+| Controller page | Show persistent device inventory (one section per tent) using `GET /api/devices/controller/:id`. |
+| Cycle page | Remove any "provision devices" UI from the grow-cycle create flow. Add an "Automation" tab on each phase. |
+| Phase editor | Add fields for `dayStartMinutes` / `dayDurationMinutes`; add a DAY/NIGHT sub-grid for thresholds (`PUT /api/grow-phases/:id/environment/:period`). |
+| Rules editor | CRUD over `POST/GET/PUT/DELETE /api/automation-rules`. Show `enabled` toggle and `lastTriggeredAt` timestamp. |
 | Telemetry UI | Group by `sensorId` rather than by `sensorType`; show sensor name; handle `TEMP_HUMIDITY` as a single sensor that emits two reading kinds. |
 | Live socket handler | Update `frontend_telemetry` payload shape (`sensorId`, `sensorName`, `sensorType`, `value`, `growCycleId`, `timestamp`). |

@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { DevicesController } from "./devices.controller.js";
 import {
-  DeviceParamsGrowCycleIdSchema,
+  DeviceParamsControllerIdSchema,
   DeviceParamsIdSchema,
   CreateDeviceSchema,
   BatchCreateDeviceSchema,
@@ -14,14 +14,14 @@ export default async function deviceRoutes(server: FastifyInstance) {
   const router = server.withTypeProvider<TypeBoxTypeProvider>();
   const controller = new DevicesController(server);
 
-  // 1. GET ALL DEVICES ASSIGNED TO A SPECIFIC GROW
+  // 1. LIST persistent hardware for a controller
   router.get(
-    "/api/devices/grow-cycle/:growCycleId",
-    { schema: { params: DeviceParamsGrowCycleIdSchema } },
+    "/api/devices/controller/:controllerId",
+    { schema: { params: DeviceParamsControllerIdSchema } },
     async (request, reply) => {
       try {
-        return await controller.getDevicesByGrowCycleId(
-          request.params.growCycleId,
+        return await controller.getDevicesByControllerId(
+          request.params.controllerId,
         );
       } catch (error) {
         return reply
@@ -31,7 +31,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 2. GET SINGLE DEVICE SPECIFICATIONS
+  // 2. GET a single device
   router.get(
     "/api/devices/:id",
     { schema: { params: DeviceParamsIdSchema } },
@@ -46,7 +46,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 3. PROVISION A NEW DEVICE ONTO A GROW
+  // 3. PROVISION a device on a controller
   router.post(
     "/api/devices",
     { schema: { body: CreateDeviceSchema } },
@@ -63,7 +63,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 4. BULK PROVISION MULTIPLE DEVICES ONTO A GROW
+  // 4. BULK PROVISION
   router.post(
     "/api/devices/batch",
     { schema: { body: BatchCreateDeviceSchema } },
@@ -80,7 +80,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 5. CHANGE DEVICE CONFIGURATION OR GPIO PIN
+  // 5. UPDATE device configuration
   router.put(
     "/api/devices/:id",
     { schema: { params: DeviceParamsIdSchema, body: UpdateDeviceSchema } },
@@ -96,7 +96,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 6. UNMAP / REMOVE A DEVICE
+  // 6. DELETE
   router.delete(
     "/api/devices/:id",
     { schema: { params: DeviceParamsIdSchema } },
@@ -110,7 +110,7 @@ export default async function deviceRoutes(server: FastifyInstance) {
     },
   );
 
-  // 7. SEND ON/OFF COMMAND TO A DEVICE
+  // 7. SEND ON/OFF COMMAND (source = MANUAL)
   router.post(
     "/api/devices/:id/command",
     {
