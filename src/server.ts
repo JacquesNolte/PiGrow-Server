@@ -17,6 +17,7 @@ import telemetryRoutes from "./api/modules/telemetry/telemetry.routes.js";
 import { mqttClient, MQTT_BROKER_URL } from "./mqtt/client.js";
 import { prisma } from "./prisma.js";
 import { automationScheduler } from "./automation/scheduler.js";
+import { intervalScheduler } from "./automation/interval-scheduler.js";
 
 // 1. Initialize Fastify and register CORS for the Frontend
 const fastify = Fastify({
@@ -135,6 +136,11 @@ await fastify.register(telemetryRoutes);
 automationScheduler.start();
 const stopScheduler = () => automationScheduler.stop();
 fastify.addHook("onClose", stopScheduler);
+
+// 5b. Start the interval scheduler (5s tick for INTERVAL / duty-cycle rules)
+intervalScheduler.start();
+const stopInterval = () => intervalScheduler.stop();
+fastify.addHook("onClose", stopInterval);
 
 // 6. Start Fastify (Listen on Port 4000 for both REST and Socket.io traffic)
 const start = async () => {

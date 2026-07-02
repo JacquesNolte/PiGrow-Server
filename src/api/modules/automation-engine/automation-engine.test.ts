@@ -254,6 +254,113 @@ describe("Automation engine", () => {
     assert.match(log.reason ?? "", /TEMP.*17.*min 19/);
   });
 
+  // ---------- DeviceThresholdHold writes (threshold overrides interval) ----------
+
+  test("evaluator - writes a DeviceThresholdHold row when a threshold rule fires", async () => {
+    // Fresh setup: clean the heater's state + rules, then create a NIGHT env
+    // + BELOW_MIN rule, fire it, and assert the hold row exists with the
+    // correct heldUntil and ruleId.
+    await prismaClient.deviceStateLog.deleteMany({ where: { deviceId: heaterId } });
+    await prismaClient.automationRule.deleteMany({ where: { deviceId: heaterId } });
+    await prismaClient.phaseEnvironment.deleteMany({
+      where: { growPhaseId, period: "NIGHT" },
+    });
+    await prismaClient.phaseEnvironment.create({
+      data: {
+        growPhaseId,
+        period: "NIGHT",
+        tempMax: 24,
+        tempMin: 19,
+      },
+    });
+    const rule = await prismaClient.automationRule.create({
+      data: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: "TEMPERATURE",
+        period: "NIGHT",
+        condition: "BELOW_MIN",
+        action: "ON",
+        cooldownSeconds: 0,
+      },
+    });
+
+    const fireAt = new Date("2026-07-01T02:00:00");
+    await evaluateThresholds({
+      growCycleId,
+      sensorType: "TEMPERATURE",
+      value: 17,
+      now: fireAt,
+    });
+
+    const hold = await prismaClient.deviceThresholdHold.findUnique({
+      where: { deviceId: heaterId },
+    });
+    assert.ok(hold, "DeviceThresholdHold should be written on a threshold fire");
+    assert.equal(hold.ruleId, rule.id);
+    // heldUntil is now + cooldownSeconds (0 -> now). Use a small tolerance.
+    assert.ok(
+      Math.abs(hold.heldUntil.getTime() - fireAt.getTime()) < 50,
+      `heldUntil should be ~${fireAt.toISOString()}, got ${hold.heldUntil.toISOString()}`,
+    );
+  });
+
+  test("evaluator - refreshes the DeviceThresholdHold on a subsequent fire", async () => {
+    // Hold from the previous test exists. Fire again with cooldownSeconds=120
+    // and assert heldUntil moves to now + 120s. To do that, update the rule's
+    // cooldown to 120 (the previous test used 0).
+    const rule = await prismaClient.automationRule.findFirstOrThrow({
+      where: { deviceId: heaterId, condition: "BELOW_MIN" },
+    });
+    await prismaClient.automationRule.update({
+      where: { id: rule.id },
+      data: { cooldownSeconds: 120 },
+    });
+
+    const fireAt = new Date("2026-07-01T03:00:00");
+    await evaluateThresholds({
+      growCycleId,
+      sensorType: "TEMPERATURE",
+      value: 16,
+      now: fireAt,
+    });
+
+    const hold = await prismaClient.deviceThresholdHold.findUnique({
+      where: { deviceId: heaterId },
+    });
+    assert.ok(hold);
+    const expected = fireAt.getTime() + 120_000;
+    assert.ok(
+      Math.abs(hold.heldUntil.getTime() - expected) < 50,
+      `heldUntil should be ~${new Date(expected).toISOString()}, got ${hold.heldUntil.toISOString()}`,
+    );
+    assert.equal(hold.ruleId, rule.id);
+  });
+
+  test("evaluator - does NOT write a DeviceThresholdHold when the threshold does not fire", async () => {
+    // Clean the hold. Then evaluate a reading that does NOT cross any
+    // threshold (25°C at night when tempMin=19, tempMax=24 -> 25 > 24, ABOVE_MAX).
+    // Wait — the heater rule is BELOW_MIN. A reading of 25°C does not cross
+    // BELOW_MIN (25 > 19). The heater has a BELOW_MIN rule (action ON when
+    // temp < 19). 25 does not fire it. So no fire -> no hold write.
+    // But there might be a hold from the previous test. Delete it first.
+    await prismaClient.deviceThresholdHold.deleteMany({
+      where: { deviceId: heaterId },
+    });
+
+    await evaluateThresholds({
+      growCycleId,
+      sensorType: "TEMPERATURE",
+      value: 25,
+      now: new Date("2026-07-01T02:00:00"),
+    });
+
+    const hold = await prismaClient.deviceThresholdHold.findUnique({
+      where: { deviceId: heaterId },
+    });
+    assert.equal(hold, null, "No hold should be written when no threshold fires");
+  });
+
   // ---------- ABOVE_MIN / BELOW_MAX / ABOVE_TARGET / BELOW_TARGET rule conditions ----------
 
   test("evaluator - BELOW_MAX rule fires when telemetry value drops below the active DAY tempMax", async () => {

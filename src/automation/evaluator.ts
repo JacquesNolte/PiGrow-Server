@@ -242,5 +242,23 @@ export async function evaluateThresholds({
         `[evaluator] cycle=${cycle.id} rule=${rule.id} device=${rule.device.id} action=${rule.action} value=${value}`,
       );
     }
+
+    // Mark the device as "threshold-held" for the interval scheduler so an
+    // interval schedule on the same device yields while this condition is
+    // actively asserting. heldUntil = now + cooldownSeconds; the scheduler
+    // fully suspends the device while the hold is fresh. Refreshed on every
+    // fire, so a persistent condition keeps the hold alive.
+    await prisma.deviceThresholdHold.upsert({
+      where: { deviceId: rule.device.id },
+      create: {
+        deviceId: rule.device.id,
+        heldUntil: new Date(now.getTime() + rule.cooldownSeconds * 1000),
+        ruleId: rule.id,
+      },
+      update: {
+        heldUntil: new Date(now.getTime() + rule.cooldownSeconds * 1000),
+        ruleId: rule.id,
+      },
+    });
   }
 }

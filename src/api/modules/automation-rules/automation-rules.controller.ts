@@ -15,6 +15,8 @@ interface CreateRuleInput {
   condition: RuleConditionLiteral;
   action: DeviceActionLiteral;
   cooldownSeconds?: number;
+  intervalOnSeconds?: number | null;
+  intervalCycleSeconds?: number | null;
   enabled?: boolean;
 }
 
@@ -25,6 +27,8 @@ interface UpdateRuleInput {
   condition?: RuleConditionLiteral;
   action?: DeviceActionLiteral;
   cooldownSeconds?: number;
+  intervalOnSeconds?: number | null;
+  intervalCycleSeconds?: number | null;
   enabled?: boolean;
 }
 
@@ -50,8 +54,12 @@ export class AutomationRulesController {
   //     the grow-phase clock, so schedule conditions can never fire)
   //   - for ALWAYS_ON / ALWAYS_OFF, action must match the condition
   //   - for ALWAYS_ON / ALWAYS_OFF, watchedSensorType must be null
+  //   - for INTERVAL, watchedSensorType must be null, action must be ON, and
+  //     intervalOnSeconds / intervalCycleSeconds must be set and valid
   //   - for any threshold condition (ABOVE_MAX / BELOW_MIN / ABOVE_MIN /
   //     BELOW_MAX / ABOVE_TARGET / BELOW_TARGET), watchedSensorType must be set
+  //   - for any non-INTERVAL condition, the interval duration fields must be
+  //     null (interval schedules are a separate, time-based rule shape)
   private validateScopeAndPeriod(input: {
     growCycleId?: string | null;
     growPhaseId?: string | null;
@@ -59,6 +67,8 @@ export class AutomationRulesController {
     condition: RuleConditionLiteral;
     action?: DeviceActionLiteral;
     watchedSensorType?: SensorTypeLiteral | null;
+    intervalOnSeconds?: number | null;
+    intervalCycleSeconds?: number | null;
   }) {
     const hasCycle = !!input.growCycleId;
     const hasPhase = !!input.growPhaseId;
@@ -71,6 +81,54 @@ export class AutomationRulesController {
     if (input.condition === "SCHEDULE_ON" || input.condition === "SCHEDULE_OFF") {
       throw new AutomationRulesError(
         "SCHEDULE_ON/SCHEDULE_OFF conditions are no longer supported; light scheduling is automatic from the grow-phase clock",
+      );
+    }
+
+    if (input.condition === "INTERVAL") {
+      if (
+        input.watchedSensorType !== undefined &&
+        input.watchedSensorType !== null
+      ) {
+        throw new AutomationRulesError(
+          "watchedSensorType must be null for INTERVAL rules",
+        );
+      }
+      if (input.action !== undefined && input.action !== "ON") {
+        throw new AutomationRulesError(
+          "action must be ON for condition INTERVAL",
+        );
+      }
+      if (
+        input.intervalOnSeconds === undefined ||
+        input.intervalOnSeconds === null
+      ) {
+        throw new AutomationRulesError(
+          "intervalOnSeconds is required for INTERVAL rules",
+        );
+      }
+      if (
+        input.intervalCycleSeconds === undefined ||
+        input.intervalCycleSeconds === null
+      ) {
+        throw new AutomationRulesError(
+          "intervalCycleSeconds is required for INTERVAL rules",
+        );
+      }
+      if (input.intervalCycleSeconds <= input.intervalOnSeconds) {
+        throw new AutomationRulesError(
+          "intervalCycleSeconds must be greater than intervalOnSeconds",
+        );
+      }
+      return;
+    }
+
+    // Non-INTERVAL: the interval duration fields must be null/unset.
+    if (
+      (input.intervalOnSeconds !== undefined && input.intervalOnSeconds !== null) ||
+      (input.intervalCycleSeconds !== undefined && input.intervalCycleSeconds !== null)
+    ) {
+      throw new AutomationRulesError(
+        "intervalOnSeconds and intervalCycleSeconds must be null for non-INTERVAL rules",
       );
     }
 
@@ -158,6 +216,8 @@ export class AutomationRulesController {
       condition: body.condition,
       action: body.action,
       watchedSensorType: body.watchedSensorType ?? null,
+      intervalOnSeconds: body.intervalOnSeconds ?? null,
+      intervalCycleSeconds: body.intervalCycleSeconds ?? null,
     });
 
     await this.assertDeviceEligibleForRule(body.deviceId);
@@ -172,6 +232,8 @@ export class AutomationRulesController {
         condition: body.condition,
         action: body.action,
         cooldownSeconds: body.cooldownSeconds ?? 180,
+        intervalOnSeconds: body.intervalOnSeconds ?? null,
+        intervalCycleSeconds: body.intervalCycleSeconds ?? null,
         enabled: body.enabled ?? true,
       },
     });
@@ -192,6 +254,14 @@ export class AutomationRulesController {
       body.watchedSensorType === undefined
         ? (existing.watchedSensorType as SensorTypeLiteral | null)
         : body.watchedSensorType;
+    const nextIntervalOnSeconds =
+      body.intervalOnSeconds === undefined
+        ? existing.intervalOnSeconds
+        : body.intervalOnSeconds;
+    const nextIntervalCycleSeconds =
+      body.intervalCycleSeconds === undefined
+        ? existing.intervalCycleSeconds
+        : body.intervalCycleSeconds;
 
     this.validateScopeAndPeriod({
       growCycleId: existing.growCycleId,
@@ -200,6 +270,8 @@ export class AutomationRulesController {
       condition: nextCondition,
       action: nextAction,
       watchedSensorType: nextWatchedSensorType,
+      intervalOnSeconds: nextIntervalOnSeconds,
+      intervalCycleSeconds: nextIntervalCycleSeconds,
     });
 
     if (body.deviceId && body.deviceId !== existing.deviceId) {

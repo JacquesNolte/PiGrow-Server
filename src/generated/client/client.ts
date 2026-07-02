@@ -82,6 +82,11 @@ export type AutomationRule = Prisma.AutomationRuleModel
  */
 export type DeviceStateLog = Prisma.DeviceStateLogModel
 /**
+ * Model DeviceThresholdHold
+ * 
+ */
+export type DeviceThresholdHold = Prisma.DeviceThresholdHoldModel
+/**
  * Model Telemetry
  * 
  */

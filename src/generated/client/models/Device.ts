@@ -259,6 +259,7 @@ export type DeviceWhereInput = {
   controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
   deviceStateLogs?: Prisma.DeviceStateLogListRelationFilter
   automationRules?: Prisma.AutomationRuleListRelationFilter
+  thresholdHold?: Prisma.XOR<Prisma.DeviceThresholdHoldNullableScalarRelationFilter, Prisma.DeviceThresholdHoldWhereInput> | null
 }
 
 export type DeviceOrderByWithRelationInput = {
@@ -275,6 +276,7 @@ export type DeviceOrderByWithRelationInput = {
   controller?: Prisma.ControllerOrderByWithRelationInput
   deviceStateLogs?: Prisma.DeviceStateLogOrderByRelationAggregateInput
   automationRules?: Prisma.AutomationRuleOrderByRelationAggregateInput
+  thresholdHold?: Prisma.DeviceThresholdHoldOrderByWithRelationInput
 }
 
 export type DeviceWhereUniqueInput = Prisma.AtLeast<{
@@ -294,6 +296,7 @@ export type DeviceWhereUniqueInput = Prisma.AtLeast<{
   controller?: Prisma.XOR<Prisma.ControllerScalarRelationFilter, Prisma.ControllerWhereInput>
   deviceStateLogs?: Prisma.DeviceStateLogListRelationFilter
   automationRules?: Prisma.AutomationRuleListRelationFilter
+  thresholdHold?: Prisma.XOR<Prisma.DeviceThresholdHoldNullableScalarRelationFilter, Prisma.DeviceThresholdHoldWhereInput> | null
 }, "id">
 
 export type DeviceOrderByWithAggregationInput = {
@@ -343,6 +346,7 @@ export type DeviceCreateInput = {
   controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
   deviceStateLogs?: Prisma.DeviceStateLogCreateNestedManyWithoutDeviceInput
   automationRules?: Prisma.AutomationRuleCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateInput = {
@@ -358,6 +362,7 @@ export type DeviceUncheckedCreateInput = {
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
   automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceUpdateInput = {
@@ -373,6 +378,7 @@ export type DeviceUpdateInput = {
   controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
   deviceStateLogs?: Prisma.DeviceStateLogUpdateManyWithoutDeviceNestedInput
   automationRules?: Prisma.AutomationRuleUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUpdateOneWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateInput = {
@@ -388,6 +394,7 @@ export type DeviceUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
   automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedUpdateOneWithoutDeviceNestedInput
 }
 
 export type DeviceCreateManyInput = {
@@ -580,6 +587,20 @@ export type DeviceUpdateOneRequiredWithoutDeviceStateLogsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutDeviceStateLogsInput, Prisma.DeviceUpdateWithoutDeviceStateLogsInput>, Prisma.DeviceUncheckedUpdateWithoutDeviceStateLogsInput>
 }
 
+export type DeviceCreateNestedOneWithoutThresholdHoldInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutThresholdHoldInput, Prisma.DeviceUncheckedCreateWithoutThresholdHoldInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutThresholdHoldInput
+  connect?: Prisma.DeviceWhereUniqueInput
+}
+
+export type DeviceUpdateOneRequiredWithoutThresholdHoldNestedInput = {
+  create?: Prisma.XOR<Prisma.DeviceCreateWithoutThresholdHoldInput, Prisma.DeviceUncheckedCreateWithoutThresholdHoldInput>
+  connectOrCreate?: Prisma.DeviceCreateOrConnectWithoutThresholdHoldInput
+  upsert?: Prisma.DeviceUpsertWithoutThresholdHoldInput
+  connect?: Prisma.DeviceWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.DeviceUpdateToOneWithWhereWithoutThresholdHoldInput, Prisma.DeviceUpdateWithoutThresholdHoldInput>, Prisma.DeviceUncheckedUpdateWithoutThresholdHoldInput>
+}
+
 export type DeviceCreateWithoutControllerInput = {
   id?: string
   name: string
@@ -592,6 +613,7 @@ export type DeviceCreateWithoutControllerInput = {
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogCreateNestedManyWithoutDeviceInput
   automationRules?: Prisma.AutomationRuleCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutControllerInput = {
@@ -606,6 +628,7 @@ export type DeviceUncheckedCreateWithoutControllerInput = {
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
   automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutControllerInput = {
@@ -662,6 +685,7 @@ export type DeviceCreateWithoutAutomationRulesInput = {
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
   deviceStateLogs?: Prisma.DeviceStateLogCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutAutomationRulesInput = {
@@ -676,6 +700,7 @@ export type DeviceUncheckedCreateWithoutAutomationRulesInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutAutomationRulesInput = {
@@ -706,6 +731,7 @@ export type DeviceUpdateWithoutAutomationRulesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
   deviceStateLogs?: Prisma.DeviceStateLogUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUpdateOneWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutAutomationRulesInput = {
@@ -720,6 +746,7 @@ export type DeviceUncheckedUpdateWithoutAutomationRulesInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedUpdateOneWithoutDeviceNestedInput
 }
 
 export type DeviceCreateWithoutDeviceStateLogsInput = {
@@ -734,6 +761,7 @@ export type DeviceCreateWithoutDeviceStateLogsInput = {
   updatedAt?: Date | string
   controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
   automationRules?: Prisma.AutomationRuleCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceUncheckedCreateWithoutDeviceStateLogsInput = {
@@ -748,6 +776,7 @@ export type DeviceUncheckedCreateWithoutDeviceStateLogsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutDeviceInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedCreateNestedOneWithoutDeviceInput
 }
 
 export type DeviceCreateOrConnectWithoutDeviceStateLogsInput = {
@@ -778,6 +807,7 @@ export type DeviceUpdateWithoutDeviceStateLogsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
   automationRules?: Prisma.AutomationRuleUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUpdateOneWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutDeviceStateLogsInput = {
@@ -791,6 +821,83 @@ export type DeviceUncheckedUpdateWithoutDeviceStateLogsInput = {
   isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedUpdateOneWithoutDeviceNestedInput
+}
+
+export type DeviceCreateWithoutThresholdHoldInput = {
+  id?: string
+  name: string
+  type: $Enums.DeviceType
+  pinNumber: number
+  mqttTopic: string
+  automationMode?: $Enums.AutomationMode
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  controller: Prisma.ControllerCreateNestedOneWithoutDevicesInput
+  deviceStateLogs?: Prisma.DeviceStateLogCreateNestedManyWithoutDeviceInput
+  automationRules?: Prisma.AutomationRuleCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceUncheckedCreateWithoutThresholdHoldInput = {
+  id?: string
+  controllerId: string
+  name: string
+  type: $Enums.DeviceType
+  pinNumber: number
+  mqttTopic: string
+  automationMode?: $Enums.AutomationMode
+  isActive?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deviceStateLogs?: Prisma.DeviceStateLogUncheckedCreateNestedManyWithoutDeviceInput
+  automationRules?: Prisma.AutomationRuleUncheckedCreateNestedManyWithoutDeviceInput
+}
+
+export type DeviceCreateOrConnectWithoutThresholdHoldInput = {
+  where: Prisma.DeviceWhereUniqueInput
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutThresholdHoldInput, Prisma.DeviceUncheckedCreateWithoutThresholdHoldInput>
+}
+
+export type DeviceUpsertWithoutThresholdHoldInput = {
+  update: Prisma.XOR<Prisma.DeviceUpdateWithoutThresholdHoldInput, Prisma.DeviceUncheckedUpdateWithoutThresholdHoldInput>
+  create: Prisma.XOR<Prisma.DeviceCreateWithoutThresholdHoldInput, Prisma.DeviceUncheckedCreateWithoutThresholdHoldInput>
+  where?: Prisma.DeviceWhereInput
+}
+
+export type DeviceUpdateToOneWithWhereWithoutThresholdHoldInput = {
+  where?: Prisma.DeviceWhereInput
+  data: Prisma.XOR<Prisma.DeviceUpdateWithoutThresholdHoldInput, Prisma.DeviceUncheckedUpdateWithoutThresholdHoldInput>
+}
+
+export type DeviceUpdateWithoutThresholdHoldInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  pinNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
+  automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  controller?: Prisma.ControllerUpdateOneRequiredWithoutDevicesNestedInput
+  deviceStateLogs?: Prisma.DeviceStateLogUpdateManyWithoutDeviceNestedInput
+  automationRules?: Prisma.AutomationRuleUpdateManyWithoutDeviceNestedInput
+}
+
+export type DeviceUncheckedUpdateWithoutThresholdHoldInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  controllerId?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  type?: Prisma.EnumDeviceTypeFieldUpdateOperationsInput | $Enums.DeviceType
+  pinNumber?: Prisma.IntFieldUpdateOperationsInput | number
+  mqttTopic?: Prisma.StringFieldUpdateOperationsInput | string
+  automationMode?: Prisma.EnumAutomationModeFieldUpdateOperationsInput | $Enums.AutomationMode
+  isActive?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
   automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutDeviceNestedInput
 }
 
@@ -818,6 +925,7 @@ export type DeviceUpdateWithoutControllerInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUpdateManyWithoutDeviceNestedInput
   automationRules?: Prisma.AutomationRuleUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUpdateOneWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateWithoutControllerInput = {
@@ -832,6 +940,7 @@ export type DeviceUncheckedUpdateWithoutControllerInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deviceStateLogs?: Prisma.DeviceStateLogUncheckedUpdateManyWithoutDeviceNestedInput
   automationRules?: Prisma.AutomationRuleUncheckedUpdateManyWithoutDeviceNestedInput
+  thresholdHold?: Prisma.DeviceThresholdHoldUncheckedUpdateOneWithoutDeviceNestedInput
 }
 
 export type DeviceUncheckedUpdateManyWithoutControllerInput = {
@@ -900,6 +1009,7 @@ export type DeviceSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
   deviceStateLogs?: boolean | Prisma.Device$deviceStateLogsArgs<ExtArgs>
   automationRules?: boolean | Prisma.Device$automationRulesArgs<ExtArgs>
+  thresholdHold?: boolean | Prisma.Device$thresholdHoldArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["device"]>
 
@@ -949,6 +1059,7 @@ export type DeviceInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   controller?: boolean | Prisma.ControllerDefaultArgs<ExtArgs>
   deviceStateLogs?: boolean | Prisma.Device$deviceStateLogsArgs<ExtArgs>
   automationRules?: boolean | Prisma.Device$automationRulesArgs<ExtArgs>
+  thresholdHold?: boolean | Prisma.Device$thresholdHoldArgs<ExtArgs>
   _count?: boolean | Prisma.DeviceCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type DeviceIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -964,6 +1075,7 @@ export type $DevicePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     controller: Prisma.$ControllerPayload<ExtArgs>
     deviceStateLogs: Prisma.$DeviceStateLogPayload<ExtArgs>[]
     automationRules: Prisma.$AutomationRulePayload<ExtArgs>[]
+    thresholdHold: Prisma.$DeviceThresholdHoldPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1373,6 +1485,7 @@ export interface Prisma__DeviceClient<T, Null = never, ExtArgs extends runtime.T
   controller<T extends Prisma.ControllerDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ControllerDefaultArgs<ExtArgs>>): Prisma.Prisma__ControllerClient<runtime.Types.Result.GetResult<Prisma.$ControllerPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   deviceStateLogs<T extends Prisma.Device$deviceStateLogsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$deviceStateLogsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DeviceStateLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   automationRules<T extends Prisma.Device$automationRulesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$automationRulesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AutomationRulePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  thresholdHold<T extends Prisma.Device$thresholdHoldArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Device$thresholdHoldArgs<ExtArgs>>): Prisma.Prisma__DeviceThresholdHoldClient<runtime.Types.Result.GetResult<Prisma.$DeviceThresholdHoldPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1858,6 +1971,25 @@ export type Device$automationRulesArgs<ExtArgs extends runtime.Types.Extensions.
   take?: number
   skip?: number
   distinct?: Prisma.AutomationRuleScalarFieldEnum | Prisma.AutomationRuleScalarFieldEnum[]
+}
+
+/**
+ * Device.thresholdHold
+ */
+export type Device$thresholdHoldArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DeviceThresholdHold
+   */
+  select?: Prisma.DeviceThresholdHoldSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DeviceThresholdHold
+   */
+  omit?: Prisma.DeviceThresholdHoldOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DeviceThresholdHoldInclude<ExtArgs> | null
+  where?: Prisma.DeviceThresholdHoldWhereInput
 }
 
 /**

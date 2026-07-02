@@ -392,6 +392,7 @@ export const ModelName = {
   PhaseEnvironment: 'PhaseEnvironment',
   AutomationRule: 'AutomationRule',
   DeviceStateLog: 'DeviceStateLog',
+  DeviceThresholdHold: 'DeviceThresholdHold',
   Telemetry: 'Telemetry'
 } as const
 
@@ -408,7 +409,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "controller" | "sensor" | "device" | "growCycle" | "growPhase" | "phaseEnvironment" | "automationRule" | "deviceStateLog" | "telemetry"
+    modelProps: "controller" | "sensor" | "device" | "growCycle" | "growPhase" | "phaseEnvironment" | "automationRule" | "deviceStateLog" | "deviceThresholdHold" | "telemetry"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1004,6 +1005,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    DeviceThresholdHold: {
+      payload: Prisma.$DeviceThresholdHoldPayload<ExtArgs>
+      fields: Prisma.DeviceThresholdHoldFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.DeviceThresholdHoldFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.DeviceThresholdHoldFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>
+        }
+        findFirst: {
+          args: Prisma.DeviceThresholdHoldFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.DeviceThresholdHoldFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>
+        }
+        findMany: {
+          args: Prisma.DeviceThresholdHoldFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>[]
+        }
+        create: {
+          args: Prisma.DeviceThresholdHoldCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>
+        }
+        createMany: {
+          args: Prisma.DeviceThresholdHoldCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.DeviceThresholdHoldCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>[]
+        }
+        delete: {
+          args: Prisma.DeviceThresholdHoldDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>
+        }
+        update: {
+          args: Prisma.DeviceThresholdHoldUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>
+        }
+        deleteMany: {
+          args: Prisma.DeviceThresholdHoldDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.DeviceThresholdHoldUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.DeviceThresholdHoldUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>[]
+        }
+        upsert: {
+          args: Prisma.DeviceThresholdHoldUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$DeviceThresholdHoldPayload>
+        }
+        aggregate: {
+          args: Prisma.DeviceThresholdHoldAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateDeviceThresholdHold>
+        }
+        groupBy: {
+          args: Prisma.DeviceThresholdHoldGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceThresholdHoldGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.DeviceThresholdHoldCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.DeviceThresholdHoldCountAggregateOutputType> | number
+        }
+      }
+    }
     Telemetry: {
       payload: Prisma.$TelemetryPayload<ExtArgs>
       fields: Prisma.TelemetryFieldRefs
@@ -1223,6 +1298,8 @@ export const AutomationRuleScalarFieldEnum = {
   condition: 'condition',
   action: 'action',
   cooldownSeconds: 'cooldownSeconds',
+  intervalOnSeconds: 'intervalOnSeconds',
+  intervalCycleSeconds: 'intervalCycleSeconds',
   enabled: 'enabled',
   lastTriggeredAt: 'lastTriggeredAt',
   createdAt: 'createdAt',
@@ -1242,6 +1319,16 @@ export const DeviceStateLogScalarFieldEnum = {
 } as const
 
 export type DeviceStateLogScalarFieldEnum = (typeof DeviceStateLogScalarFieldEnum)[keyof typeof DeviceStateLogScalarFieldEnum]
+
+
+export const DeviceThresholdHoldScalarFieldEnum = {
+  deviceId: 'deviceId',
+  heldUntil: 'heldUntil',
+  ruleId: 'ruleId',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DeviceThresholdHoldScalarFieldEnum = (typeof DeviceThresholdHoldScalarFieldEnum)[keyof typeof DeviceThresholdHoldScalarFieldEnum]
 
 
 export const TelemetryScalarFieldEnum = {
@@ -1564,6 +1651,7 @@ export type GlobalOmitConfig = {
   phaseEnvironment?: Prisma.PhaseEnvironmentOmit
   automationRule?: Prisma.AutomationRuleOmit
   deviceStateLog?: Prisma.DeviceStateLogOmit
+  deviceThresholdHold?: Prisma.DeviceThresholdHoldOmit
   telemetry?: Prisma.TelemetryOmit
 }
 

@@ -29,6 +29,7 @@ const AcceptedRuleConditionEnum = Type.Union([
   Type.Literal("BELOW_TARGET"),
   Type.Literal("ALWAYS_ON"),
   Type.Literal("ALWAYS_OFF"),
+  Type.Literal("INTERVAL"),
   Type.Literal("SCHEDULE_ON"),
   Type.Literal("SCHEDULE_OFF"),
 ]);
@@ -47,6 +48,8 @@ export const AutomationRuleResponseSchema = Type.Object({
   condition: AcceptedRuleConditionEnum,
   action: DeviceActionEnum,
   cooldownSeconds: Type.Integer(),
+  intervalOnSeconds: Type.Union([Type.Integer(), Type.Null()]),
+  intervalCycleSeconds: Type.Union([Type.Integer(), Type.Null()]),
   enabled: Type.Boolean(),
   lastTriggeredAt: Type.Union([Type.String({ format: "date-time" }), Type.Null()]),
   createdAt: Type.String({ format: "date-time" }),
@@ -91,6 +94,10 @@ export const CreateAutomationRuleSchema = Type.Object({
   cooldownSeconds: Type.Optional(
     Type.Integer({ minimum: 0, default: 180 }),
   ),
+  // INTERVAL-condition fields. Required & valid only when condition = INTERVAL;
+  // must be null/unset for all other conditions. Enforced in the controller.
+  intervalOnSeconds: Type.Optional(Type.Integer({ minimum: 1 })),
+  intervalCycleSeconds: Type.Optional(Type.Integer({ minimum: 2 })),
   enabled: Type.Optional(Type.Boolean({ default: true })),
 });
 
@@ -101,6 +108,8 @@ export const UpdateAutomationRuleSchema = Type.Object({
   condition: Type.Optional(AcceptedRuleConditionEnum),
   action: Type.Optional(DeviceActionEnum),
   cooldownSeconds: Type.Optional(Type.Integer({ minimum: 0 })),
+  intervalOnSeconds: Type.Optional(Type.Integer({ minimum: 1 })),
+  intervalCycleSeconds: Type.Optional(Type.Integer({ minimum: 2 })),
   enabled: Type.Optional(Type.Boolean()),
 });
 

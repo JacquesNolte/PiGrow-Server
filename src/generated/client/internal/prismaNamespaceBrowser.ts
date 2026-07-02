@@ -59,6 +59,7 @@ export const ModelName = {
   PhaseEnvironment: 'PhaseEnvironment',
   AutomationRule: 'AutomationRule',
   DeviceStateLog: 'DeviceStateLog',
+  DeviceThresholdHold: 'DeviceThresholdHold',
   Telemetry: 'Telemetry'
 } as const
 
@@ -184,6 +185,8 @@ export const AutomationRuleScalarFieldEnum = {
   condition: 'condition',
   action: 'action',
   cooldownSeconds: 'cooldownSeconds',
+  intervalOnSeconds: 'intervalOnSeconds',
+  intervalCycleSeconds: 'intervalCycleSeconds',
   enabled: 'enabled',
   lastTriggeredAt: 'lastTriggeredAt',
   createdAt: 'createdAt',
@@ -203,6 +206,16 @@ export const DeviceStateLogScalarFieldEnum = {
 } as const
 
 export type DeviceStateLogScalarFieldEnum = (typeof DeviceStateLogScalarFieldEnum)[keyof typeof DeviceStateLogScalarFieldEnum]
+
+
+export const DeviceThresholdHoldScalarFieldEnum = {
+  deviceId: 'deviceId',
+  heldUntil: 'heldUntil',
+  ruleId: 'ruleId',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DeviceThresholdHoldScalarFieldEnum = (typeof DeviceThresholdHoldScalarFieldEnum)[keyof typeof DeviceThresholdHoldScalarFieldEnum]
 
 
 export const TelemetryScalarFieldEnum = {

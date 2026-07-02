@@ -28,10 +28,14 @@ export type AggregateAutomationRule = {
 
 export type AutomationRuleAvgAggregateOutputType = {
   cooldownSeconds: number | null
+  intervalOnSeconds: number | null
+  intervalCycleSeconds: number | null
 }
 
 export type AutomationRuleSumAggregateOutputType = {
   cooldownSeconds: number | null
+  intervalOnSeconds: number | null
+  intervalCycleSeconds: number | null
 }
 
 export type AutomationRuleMinAggregateOutputType = {
@@ -44,6 +48,8 @@ export type AutomationRuleMinAggregateOutputType = {
   condition: $Enums.RuleCondition | null
   action: $Enums.DeviceAction | null
   cooldownSeconds: number | null
+  intervalOnSeconds: number | null
+  intervalCycleSeconds: number | null
   enabled: boolean | null
   lastTriggeredAt: Date | null
   createdAt: Date | null
@@ -60,6 +66,8 @@ export type AutomationRuleMaxAggregateOutputType = {
   condition: $Enums.RuleCondition | null
   action: $Enums.DeviceAction | null
   cooldownSeconds: number | null
+  intervalOnSeconds: number | null
+  intervalCycleSeconds: number | null
   enabled: boolean | null
   lastTriggeredAt: Date | null
   createdAt: Date | null
@@ -76,6 +84,8 @@ export type AutomationRuleCountAggregateOutputType = {
   condition: number
   action: number
   cooldownSeconds: number
+  intervalOnSeconds: number
+  intervalCycleSeconds: number
   enabled: number
   lastTriggeredAt: number
   createdAt: number
@@ -86,10 +96,14 @@ export type AutomationRuleCountAggregateOutputType = {
 
 export type AutomationRuleAvgAggregateInputType = {
   cooldownSeconds?: true
+  intervalOnSeconds?: true
+  intervalCycleSeconds?: true
 }
 
 export type AutomationRuleSumAggregateInputType = {
   cooldownSeconds?: true
+  intervalOnSeconds?: true
+  intervalCycleSeconds?: true
 }
 
 export type AutomationRuleMinAggregateInputType = {
@@ -102,6 +116,8 @@ export type AutomationRuleMinAggregateInputType = {
   condition?: true
   action?: true
   cooldownSeconds?: true
+  intervalOnSeconds?: true
+  intervalCycleSeconds?: true
   enabled?: true
   lastTriggeredAt?: true
   createdAt?: true
@@ -118,6 +134,8 @@ export type AutomationRuleMaxAggregateInputType = {
   condition?: true
   action?: true
   cooldownSeconds?: true
+  intervalOnSeconds?: true
+  intervalCycleSeconds?: true
   enabled?: true
   lastTriggeredAt?: true
   createdAt?: true
@@ -134,6 +152,8 @@ export type AutomationRuleCountAggregateInputType = {
   condition?: true
   action?: true
   cooldownSeconds?: true
+  intervalOnSeconds?: true
+  intervalCycleSeconds?: true
   enabled?: true
   lastTriggeredAt?: true
   createdAt?: true
@@ -237,6 +257,8 @@ export type AutomationRuleGroupByOutputType = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds: number
+  intervalOnSeconds: number | null
+  intervalCycleSeconds: number | null
   enabled: boolean
   lastTriggeredAt: Date | null
   createdAt: Date
@@ -276,6 +298,8 @@ export type AutomationRuleWhereInput = {
   condition?: Prisma.EnumRuleConditionFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFilter<"AutomationRule"> | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFilter<"AutomationRule"> | number
+  intervalOnSeconds?: Prisma.IntNullableFilter<"AutomationRule"> | number | null
+  intervalCycleSeconds?: Prisma.IntNullableFilter<"AutomationRule"> | number | null
   enabled?: Prisma.BoolFilter<"AutomationRule"> | boolean
   lastTriggeredAt?: Prisma.DateTimeNullableFilter<"AutomationRule"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AutomationRule"> | Date | string
@@ -295,6 +319,8 @@ export type AutomationRuleOrderByWithRelationInput = {
   condition?: Prisma.SortOrder
   action?: Prisma.SortOrder
   cooldownSeconds?: Prisma.SortOrder
+  intervalOnSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
+  intervalCycleSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
   enabled?: Prisma.SortOrder
   lastTriggeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -317,6 +343,8 @@ export type AutomationRuleWhereUniqueInput = Prisma.AtLeast<{
   condition?: Prisma.EnumRuleConditionFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFilter<"AutomationRule"> | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFilter<"AutomationRule"> | number
+  intervalOnSeconds?: Prisma.IntNullableFilter<"AutomationRule"> | number | null
+  intervalCycleSeconds?: Prisma.IntNullableFilter<"AutomationRule"> | number | null
   enabled?: Prisma.BoolFilter<"AutomationRule"> | boolean
   lastTriggeredAt?: Prisma.DateTimeNullableFilter<"AutomationRule"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AutomationRule"> | Date | string
@@ -336,6 +364,8 @@ export type AutomationRuleOrderByWithAggregationInput = {
   condition?: Prisma.SortOrder
   action?: Prisma.SortOrder
   cooldownSeconds?: Prisma.SortOrder
+  intervalOnSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
+  intervalCycleSeconds?: Prisma.SortOrderInput | Prisma.SortOrder
   enabled?: Prisma.SortOrder
   lastTriggeredAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -360,6 +390,8 @@ export type AutomationRuleScalarWhereWithAggregatesInput = {
   condition?: Prisma.EnumRuleConditionWithAggregatesFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionWithAggregatesFilter<"AutomationRule"> | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntWithAggregatesFilter<"AutomationRule"> | number
+  intervalOnSeconds?: Prisma.IntNullableWithAggregatesFilter<"AutomationRule"> | number | null
+  intervalCycleSeconds?: Prisma.IntNullableWithAggregatesFilter<"AutomationRule"> | number | null
   enabled?: Prisma.BoolWithAggregatesFilter<"AutomationRule"> | boolean
   lastTriggeredAt?: Prisma.DateTimeNullableWithAggregatesFilter<"AutomationRule"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"AutomationRule"> | Date | string
@@ -373,6 +405,8 @@ export type AutomationRuleCreateInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -392,6 +426,8 @@ export type AutomationRuleUncheckedCreateInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -405,6 +441,8 @@ export type AutomationRuleUpdateInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -424,6 +462,8 @@ export type AutomationRuleUncheckedUpdateInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -440,6 +480,8 @@ export type AutomationRuleCreateManyInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -453,6 +495,8 @@ export type AutomationRuleUpdateManyMutationInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -469,6 +513,8 @@ export type AutomationRuleUncheckedUpdateManyInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -495,6 +541,8 @@ export type AutomationRuleCountOrderByAggregateInput = {
   condition?: Prisma.SortOrder
   action?: Prisma.SortOrder
   cooldownSeconds?: Prisma.SortOrder
+  intervalOnSeconds?: Prisma.SortOrder
+  intervalCycleSeconds?: Prisma.SortOrder
   enabled?: Prisma.SortOrder
   lastTriggeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -503,6 +551,8 @@ export type AutomationRuleCountOrderByAggregateInput = {
 
 export type AutomationRuleAvgOrderByAggregateInput = {
   cooldownSeconds?: Prisma.SortOrder
+  intervalOnSeconds?: Prisma.SortOrder
+  intervalCycleSeconds?: Prisma.SortOrder
 }
 
 export type AutomationRuleMaxOrderByAggregateInput = {
@@ -515,6 +565,8 @@ export type AutomationRuleMaxOrderByAggregateInput = {
   condition?: Prisma.SortOrder
   action?: Prisma.SortOrder
   cooldownSeconds?: Prisma.SortOrder
+  intervalOnSeconds?: Prisma.SortOrder
+  intervalCycleSeconds?: Prisma.SortOrder
   enabled?: Prisma.SortOrder
   lastTriggeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -531,6 +583,8 @@ export type AutomationRuleMinOrderByAggregateInput = {
   condition?: Prisma.SortOrder
   action?: Prisma.SortOrder
   cooldownSeconds?: Prisma.SortOrder
+  intervalOnSeconds?: Prisma.SortOrder
+  intervalCycleSeconds?: Prisma.SortOrder
   enabled?: Prisma.SortOrder
   lastTriggeredAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -539,6 +593,8 @@ export type AutomationRuleMinOrderByAggregateInput = {
 
 export type AutomationRuleSumOrderByAggregateInput = {
   cooldownSeconds?: Prisma.SortOrder
+  intervalOnSeconds?: Prisma.SortOrder
+  intervalCycleSeconds?: Prisma.SortOrder
 }
 
 export type AutomationRuleCreateNestedManyWithoutDeviceInput = {
@@ -683,6 +739,14 @@ export type EnumDeviceActionFieldUpdateOperationsInput = {
   set?: $Enums.DeviceAction
 }
 
+export type NullableIntFieldUpdateOperationsInput = {
+  set?: number | null
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
 }
@@ -694,6 +758,8 @@ export type AutomationRuleCreateWithoutDeviceInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -711,6 +777,8 @@ export type AutomationRuleUncheckedCreateWithoutDeviceInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -756,6 +824,8 @@ export type AutomationRuleScalarWhereInput = {
   condition?: Prisma.EnumRuleConditionFilter<"AutomationRule"> | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFilter<"AutomationRule"> | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFilter<"AutomationRule"> | number
+  intervalOnSeconds?: Prisma.IntNullableFilter<"AutomationRule"> | number | null
+  intervalCycleSeconds?: Prisma.IntNullableFilter<"AutomationRule"> | number | null
   enabled?: Prisma.BoolFilter<"AutomationRule"> | boolean
   lastTriggeredAt?: Prisma.DateTimeNullableFilter<"AutomationRule"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"AutomationRule"> | Date | string
@@ -769,6 +839,8 @@ export type AutomationRuleCreateWithoutGrowCycleInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -786,6 +858,8 @@ export type AutomationRuleUncheckedCreateWithoutGrowCycleInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -825,6 +899,8 @@ export type AutomationRuleCreateWithoutGrowPhaseInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -842,6 +918,8 @@ export type AutomationRuleUncheckedCreateWithoutGrowPhaseInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -883,6 +961,8 @@ export type AutomationRuleCreateManyDeviceInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -896,6 +976,8 @@ export type AutomationRuleUpdateWithoutDeviceInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -913,6 +995,8 @@ export type AutomationRuleUncheckedUpdateWithoutDeviceInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -928,6 +1012,8 @@ export type AutomationRuleUncheckedUpdateManyWithoutDeviceInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -943,6 +1029,8 @@ export type AutomationRuleCreateManyGrowCycleInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -956,6 +1044,8 @@ export type AutomationRuleUpdateWithoutGrowCycleInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -973,6 +1063,8 @@ export type AutomationRuleUncheckedUpdateWithoutGrowCycleInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -988,6 +1080,8 @@ export type AutomationRuleUncheckedUpdateManyWithoutGrowCycleInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1003,6 +1097,8 @@ export type AutomationRuleCreateManyGrowPhaseInput = {
   condition: $Enums.RuleCondition
   action: $Enums.DeviceAction
   cooldownSeconds?: number
+  intervalOnSeconds?: number | null
+  intervalCycleSeconds?: number | null
   enabled?: boolean
   lastTriggeredAt?: Date | string | null
   createdAt?: Date | string
@@ -1016,6 +1112,8 @@ export type AutomationRuleUpdateWithoutGrowPhaseInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1033,6 +1131,8 @@ export type AutomationRuleUncheckedUpdateWithoutGrowPhaseInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1048,6 +1148,8 @@ export type AutomationRuleUncheckedUpdateManyWithoutGrowPhaseInput = {
   condition?: Prisma.EnumRuleConditionFieldUpdateOperationsInput | $Enums.RuleCondition
   action?: Prisma.EnumDeviceActionFieldUpdateOperationsInput | $Enums.DeviceAction
   cooldownSeconds?: Prisma.IntFieldUpdateOperationsInput | number
+  intervalOnSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  intervalCycleSeconds?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   enabled?: Prisma.BoolFieldUpdateOperationsInput | boolean
   lastTriggeredAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -1066,6 +1168,8 @@ export type AutomationRuleSelect<ExtArgs extends runtime.Types.Extensions.Intern
   condition?: boolean
   action?: boolean
   cooldownSeconds?: boolean
+  intervalOnSeconds?: boolean
+  intervalCycleSeconds?: boolean
   enabled?: boolean
   lastTriggeredAt?: boolean
   createdAt?: boolean
@@ -1085,6 +1189,8 @@ export type AutomationRuleSelectCreateManyAndReturn<ExtArgs extends runtime.Type
   condition?: boolean
   action?: boolean
   cooldownSeconds?: boolean
+  intervalOnSeconds?: boolean
+  intervalCycleSeconds?: boolean
   enabled?: boolean
   lastTriggeredAt?: boolean
   createdAt?: boolean
@@ -1104,6 +1210,8 @@ export type AutomationRuleSelectUpdateManyAndReturn<ExtArgs extends runtime.Type
   condition?: boolean
   action?: boolean
   cooldownSeconds?: boolean
+  intervalOnSeconds?: boolean
+  intervalCycleSeconds?: boolean
   enabled?: boolean
   lastTriggeredAt?: boolean
   createdAt?: boolean
@@ -1123,13 +1231,15 @@ export type AutomationRuleSelectScalar = {
   condition?: boolean
   action?: boolean
   cooldownSeconds?: boolean
+  intervalOnSeconds?: boolean
+  intervalCycleSeconds?: boolean
   enabled?: boolean
   lastTriggeredAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type AutomationRuleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "growCycleId" | "growPhaseId" | "deviceId" | "watchedSensorType" | "period" | "condition" | "action" | "cooldownSeconds" | "enabled" | "lastTriggeredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["automationRule"]>
+export type AutomationRuleOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "growCycleId" | "growPhaseId" | "deviceId" | "watchedSensorType" | "period" | "condition" | "action" | "cooldownSeconds" | "intervalOnSeconds" | "intervalCycleSeconds" | "enabled" | "lastTriggeredAt" | "createdAt" | "updatedAt", ExtArgs["result"]["automationRule"]>
 export type AutomationRuleInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   device?: boolean | Prisma.DeviceDefaultArgs<ExtArgs>
   growCycle?: boolean | Prisma.AutomationRule$growCycleArgs<ExtArgs>
@@ -1163,6 +1273,8 @@ export type $AutomationRulePayload<ExtArgs extends runtime.Types.Extensions.Inte
     condition: $Enums.RuleCondition
     action: $Enums.DeviceAction
     cooldownSeconds: number
+    intervalOnSeconds: number | null
+    intervalCycleSeconds: number | null
     enabled: boolean
     lastTriggeredAt: Date | null
     createdAt: Date
@@ -1602,6 +1714,8 @@ export interface AutomationRuleFieldRefs {
   readonly condition: Prisma.FieldRef<"AutomationRule", 'RuleCondition'>
   readonly action: Prisma.FieldRef<"AutomationRule", 'DeviceAction'>
   readonly cooldownSeconds: Prisma.FieldRef<"AutomationRule", 'Int'>
+  readonly intervalOnSeconds: Prisma.FieldRef<"AutomationRule", 'Int'>
+  readonly intervalCycleSeconds: Prisma.FieldRef<"AutomationRule", 'Int'>
   readonly enabled: Prisma.FieldRef<"AutomationRule", 'Boolean'>
   readonly lastTriggeredAt: Prisma.FieldRef<"AutomationRule", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"AutomationRule", 'DateTime'>

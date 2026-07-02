@@ -608,4 +608,169 @@ describe("Automation Rules API Feature Module", () => {
     assert.equal(response.statusCode, 201);
     assert.equal(body.condition, "BELOW_TARGET");
   });
+
+  // ---------- INTERVAL rule conditions (duty-cycle schedules) ----------
+
+  test("POST /api/automation-rules - Should create an INTERVAL rule (fan 30s ON every 5 min)", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: fanId,
+        watchedSensorType: null,
+        period: "DAY",
+        condition: "INTERVAL",
+        action: "ON",
+        intervalOnSeconds: 30,
+        intervalCycleSeconds: 300,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 201);
+    assert.equal(body.condition, "INTERVAL");
+    assert.equal(body.action, "ON");
+    assert.equal(body.watchedSensorType, null);
+    assert.equal(body.intervalOnSeconds, 30);
+    assert.equal(body.intervalCycleSeconds, 300);
+  });
+
+  test("POST /api/automation-rules - Should reject INTERVAL with action OFF", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: null,
+        condition: "INTERVAL",
+        action: "OFF",
+        intervalOnSeconds: 10,
+        intervalCycleSeconds: 60,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /action must be ON for condition INTERVAL/);
+  });
+
+  test("POST /api/automation-rules - Should reject INTERVAL with watchedSensorType set", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: "TEMPERATURE",
+        condition: "INTERVAL",
+        action: "ON",
+        intervalOnSeconds: 10,
+        intervalCycleSeconds: 60,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /watchedSensorType must be null for INTERVAL rules/);
+  });
+
+  test("POST /api/automation-rules - Should reject INTERVAL missing intervalOnSeconds", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: null,
+        condition: "INTERVAL",
+        action: "ON",
+        intervalCycleSeconds: 60,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /intervalOnSeconds is required for INTERVAL rules/);
+  });
+
+  test("POST /api/automation-rules - Should reject INTERVAL missing intervalCycleSeconds", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: null,
+        condition: "INTERVAL",
+        action: "ON",
+        intervalOnSeconds: 10,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /intervalCycleSeconds is required for INTERVAL rules/);
+  });
+
+  test("POST /api/automation-rules - Should reject INTERVAL when cycleSeconds <= onSeconds", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: null,
+        condition: "INTERVAL",
+        action: "ON",
+        intervalOnSeconds: 60,
+        intervalCycleSeconds: 60,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /intervalCycleSeconds must be greater than intervalOnSeconds/);
+  });
+
+  test("POST /api/automation-rules - Should reject INTERVAL on a LIGHT device", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: lightId,
+        watchedSensorType: null,
+        condition: "INTERVAL",
+        action: "ON",
+        intervalOnSeconds: 10,
+        intervalCycleSeconds: 60,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /LIGHT devices are not eligible/);
+  });
+
+  test("POST /api/automation-rules - Should reject interval fields on a non-INTERVAL rule", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/automation-rules",
+      payload: {
+        growPhaseId,
+        deviceId: heaterId,
+        watchedSensorType: "TEMPERATURE",
+        condition: "ABOVE_MAX",
+        action: "ON",
+        intervalOnSeconds: 10,
+        intervalCycleSeconds: 60,
+      },
+    });
+
+    const body = JSON.parse(response.body);
+    assert.equal(response.statusCode, 400);
+    assert.match(body.error, /intervalOnSeconds and intervalCycleSeconds must be null for non-INTERVAL rules/);
+  });
 });

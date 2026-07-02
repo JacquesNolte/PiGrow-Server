@@ -100,6 +100,7 @@ model Device {
   controller      Controller       @relation(fields: [controllerId], references: [id], onDelete: Cascade)
   deviceStateLogs DeviceStateLog[] // Audit trail of every ON/OFF command issued to this device
   automationRules AutomationRule[] // Rules that actuate this device
+  thresholdHold   DeviceThresholdHold? // Active "threshold is asserting this device" hold; interval scheduler yields while fresh
 }
 
 // ==========================================
@@ -197,6 +198,7 @@ enum RuleCondition {
   BELOW_TARGET
   ALWAYS_ON
   ALWAYS_OFF
+  INTERVAL
   SCHEDULE_ON
   SCHEDULE_OFF
 }
@@ -219,6 +221,11 @@ model AutomationRule {
   condition         RuleCondition
   action            DeviceAction
   cooldownSeconds   Int           @default(180) // Min gap between two auto commands from this rule
+  // INTERVAL-condition fields. For duty-cycle schedules (e.g. fan 30s ON every 5 min).
+  // intervalOnSeconds is the ON pulse duration; intervalCycleSeconds is the total
+  // cycle (ON + OFF). Required & valid only when condition = INTERVAL; null otherwise.
+  intervalOnSeconds    Int?
+  intervalCycleSeconds Int?
   enabled           Boolean       @default(true)
   lastTriggeredAt   DateTime?
   createdAt         DateTime      @default(now())
@@ -246,6 +253,20 @@ model DeviceStateLog {
 
   @@index([deviceId])
   @@index([createdAt])
+}
+
+// "Threshold is asserting this device" hold, written by the threshold evaluator
+// (src/automation/evaluator.ts) on every fire with heldUntil = now + cooldownSeconds.
+// The interval scheduler (src/automation/interval-scheduler.ts) fully suspends the
+// device while this hold is fresh, so a threshold rule can override an interval
+// schedule. ruleId is an audit field (no FK) so rule deletion doesn't cascade.
+model DeviceThresholdHold {
+  deviceId   String   @id
+  heldUntil  DateTime
+  ruleId     String?
+  updatedAt  DateTime @updatedAt
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================

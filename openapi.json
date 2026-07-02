@@ -6779,6 +6779,8 @@
                       "condition",
                       "action",
                       "cooldownSeconds",
+                      "intervalOnSeconds",
+                      "intervalCycleSeconds",
                       "enabled",
                       "lastTriggeredAt",
                       "createdAt",
@@ -6902,6 +6904,30 @@
                           {
                             "type": "string",
                             "enum": [
+                              "ABOVE_MIN"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "BELOW_MAX"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "ABOVE_TARGET"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "BELOW_TARGET"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
                               "ALWAYS_ON"
                             ]
                           },
@@ -6909,6 +6935,12 @@
                             "type": "string",
                             "enum": [
                               "ALWAYS_OFF"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "INTERVAL"
                             ]
                           },
                           {
@@ -6943,6 +6975,26 @@
                       },
                       "cooldownSeconds": {
                         "type": "integer"
+                      },
+                      "intervalOnSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "intervalCycleSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       "enabled": {
                         "type": "boolean"
@@ -7031,6 +7083,8 @@
                       "condition",
                       "action",
                       "cooldownSeconds",
+                      "intervalOnSeconds",
+                      "intervalCycleSeconds",
                       "enabled",
                       "lastTriggeredAt",
                       "createdAt",
@@ -7154,6 +7208,30 @@
                           {
                             "type": "string",
                             "enum": [
+                              "ABOVE_MIN"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "BELOW_MAX"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "ABOVE_TARGET"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "BELOW_TARGET"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
                               "ALWAYS_ON"
                             ]
                           },
@@ -7161,6 +7239,12 @@
                             "type": "string",
                             "enum": [
                               "ALWAYS_OFF"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "INTERVAL"
                             ]
                           },
                           {
@@ -7195,6 +7279,26 @@
                       },
                       "cooldownSeconds": {
                         "type": "integer"
+                      },
+                      "intervalOnSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "intervalCycleSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       "enabled": {
                         "type": "boolean"
@@ -7283,6 +7387,8 @@
                       "condition",
                       "action",
                       "cooldownSeconds",
+                      "intervalOnSeconds",
+                      "intervalCycleSeconds",
                       "enabled",
                       "lastTriggeredAt",
                       "createdAt",
@@ -7406,6 +7512,30 @@
                           {
                             "type": "string",
                             "enum": [
+                              "ABOVE_MIN"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "BELOW_MAX"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "ABOVE_TARGET"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "BELOW_TARGET"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
                               "ALWAYS_ON"
                             ]
                           },
@@ -7413,6 +7543,12 @@
                             "type": "string",
                             "enum": [
                               "ALWAYS_OFF"
+                            ]
+                          },
+                          {
+                            "type": "string",
+                            "enum": [
+                              "INTERVAL"
                             ]
                           },
                           {
@@ -7447,6 +7583,26 @@
                       },
                       "cooldownSeconds": {
                         "type": "integer"
+                      },
+                      "intervalOnSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "intervalCycleSeconds": {
+                        "anyOf": [
+                          {
+                            "type": "integer"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
                       },
                       "enabled": {
                         "type": "boolean"
@@ -7617,6 +7773,30 @@
                       {
                         "type": "string",
                         "enum": [
+                          "ABOVE_MIN"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "BELOW_MAX"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ABOVE_TARGET"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "BELOW_TARGET"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
                           "ALWAYS_ON"
                         ]
                       },
@@ -7624,6 +7804,12 @@
                         "type": "string",
                         "enum": [
                           "ALWAYS_OFF"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "INTERVAL"
                         ]
                       },
                       {
@@ -7661,6 +7847,14 @@
                     "default": 180,
                     "type": "integer"
                   },
+                  "intervalOnSeconds": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "intervalCycleSeconds": {
+                    "minimum": 2,
+                    "type": "integer"
+                  },
                   "enabled": {
                     "default": true,
                     "type": "boolean"
@@ -7687,6 +7881,8 @@
                     "condition",
                     "action",
                     "cooldownSeconds",
+                    "intervalOnSeconds",
+                    "intervalCycleSeconds",
                     "enabled",
                     "lastTriggeredAt",
                     "createdAt",
@@ -7810,6 +8006,30 @@
                         {
                           "type": "string",
                           "enum": [
+                            "ABOVE_MIN"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "BELOW_MAX"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "ABOVE_TARGET"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "BELOW_TARGET"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
                             "ALWAYS_ON"
                           ]
                         },
@@ -7817,6 +8037,12 @@
                           "type": "string",
                           "enum": [
                             "ALWAYS_OFF"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "INTERVAL"
                           ]
                         },
                         {
@@ -7851,6 +8077,26 @@
                     },
                     "cooldownSeconds": {
                       "type": "integer"
+                    },
+                    "intervalOnSeconds": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "intervalCycleSeconds": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     },
                     "enabled": {
                       "type": "boolean"
@@ -8006,6 +8252,30 @@
                       {
                         "type": "string",
                         "enum": [
+                          "ABOVE_MIN"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "BELOW_MAX"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ABOVE_TARGET"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "BELOW_TARGET"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
                           "ALWAYS_ON"
                         ]
                       },
@@ -8013,6 +8283,12 @@
                         "type": "string",
                         "enum": [
                           "ALWAYS_OFF"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "enum": [
+                          "INTERVAL"
                         ]
                       },
                       {
@@ -8047,6 +8323,14 @@
                   },
                   "cooldownSeconds": {
                     "minimum": 0,
+                    "type": "integer"
+                  },
+                  "intervalOnSeconds": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "intervalCycleSeconds": {
+                    "minimum": 2,
                     "type": "integer"
                   },
                   "enabled": {
@@ -8085,6 +8369,8 @@
                     "condition",
                     "action",
                     "cooldownSeconds",
+                    "intervalOnSeconds",
+                    "intervalCycleSeconds",
                     "enabled",
                     "lastTriggeredAt",
                     "createdAt",
@@ -8208,6 +8494,30 @@
                         {
                           "type": "string",
                           "enum": [
+                            "ABOVE_MIN"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "BELOW_MAX"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "ABOVE_TARGET"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "BELOW_TARGET"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
                             "ALWAYS_ON"
                           ]
                         },
@@ -8215,6 +8525,12 @@
                           "type": "string",
                           "enum": [
                             "ALWAYS_OFF"
+                          ]
+                        },
+                        {
+                          "type": "string",
+                          "enum": [
+                            "INTERVAL"
                           ]
                         },
                         {
@@ -8249,6 +8565,26 @@
                     },
                     "cooldownSeconds": {
                       "type": "integer"
+                    },
+                    "intervalOnSeconds": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "intervalCycleSeconds": {
+                      "anyOf": [
+                        {
+                          "type": "integer"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     },
                     "enabled": {
                       "type": "boolean"
